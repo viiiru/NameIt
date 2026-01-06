@@ -11,6 +11,7 @@ const elements = {
   imagePlaceholder: document.getElementById("image-placeholder"),
   endPlaceholder: document.getElementById("end-placeholder"),
   startButton: document.getElementById("start-button"),
+  stopButton: document.getElementById("stop-button"),
   speakButton: document.getElementById("speak-button"),
   speechStatus: document.getElementById("speech-status"),
   gameMessage: document.getElementById("game-message"),
@@ -125,9 +126,17 @@ function resetGameState() {
   if (elements.gameMessage) elements.gameMessage.textContent = "";
   acceptingAnswers = false;
 
+  // Reset the image pool for a fresh random shuffle each round
+  remainingItems = [];
+
   // Ensure end image is hidden when resetting
   if (elements.endPlaceholder) {
     elements.endPlaceholder.classList.add("hidden");
+  }
+
+  // Hide stop button when resetting
+  if (elements.stopButton) {
+    elements.stopButton.style.display = "none";
   }
 
   if (roundTimerId) {
@@ -142,6 +151,10 @@ function startRound() {
   if (elements.startButton) {
     elements.startButton.textContent = "Playing…";
     elements.startButton.disabled = true;
+  }
+  // Show stop button, hide start button text
+  if (elements.stopButton) {
+    elements.stopButton.style.display = "inline-flex";
   }
   // Disable duration selector during play
   if (elements.durationSelect) {
@@ -182,6 +195,61 @@ function startRound() {
   }, 1000);
 }
 
+function stopGame() {
+  // Stop the game immediately (same as endRound but with different message)
+  acceptingAnswers = false;
+  if (roundTimerId) {
+    clearInterval(roundTimerId);
+    roundTimerId = null;
+  }
+
+  if (recognition && isListening) {
+    recognition.stop();
+  }
+
+  elements.startButton.disabled = false;
+  elements.startButton.textContent = "Start Round";
+  // Hide stop button, show start button
+  if (elements.stopButton) {
+    elements.stopButton.style.display = "none";
+  }
+  // Re-enable duration selector
+  if (elements.durationSelect) {
+    elements.durationSelect.disabled = false;
+  }
+  elements.speakButton.disabled = true;
+  elements.gameMessage.textContent = `Game stopped. Your score: ${currentScore}`;
+  
+  // Hide current game image completely before showing end picture
+  if (elements.currentImage) {
+    elements.currentImage.classList.add("hidden");
+    elements.currentImage.classList.remove("visible");
+    elements.currentImage.src = ""; // Clear the image source
+  }
+  
+  // Show end picture
+  if (elements.endPlaceholder) {
+    elements.endPlaceholder.classList.remove("hidden");
+  }
+
+  // Stop all background music and play end music
+  if (backgroundMusic) {
+    backgroundMusic.pause();
+    backgroundMusic.currentTime = 0;
+  }
+  
+  if (endMusic && !isMuted) {
+    try {
+      endMusic.currentTime = 0;
+      endMusic.play().catch(() => {
+        // If play fails, ignore silently
+      });
+    } catch {
+      // Ignore errors
+    }
+  }
+}
+
 function endRound() {
   acceptingAnswers = false;
   if (roundTimerId) {
@@ -195,6 +263,10 @@ function endRound() {
 
   elements.startButton.disabled = false;
   elements.startButton.textContent = "Play Again";
+  // Hide stop button, show start button
+  if (elements.stopButton) {
+    elements.stopButton.style.display = "none";
+  }
   // Re-enable duration selector after round ends
   if (elements.durationSelect) {
     elements.durationSelect.disabled = false;
@@ -202,9 +274,17 @@ function endRound() {
   elements.speakButton.disabled = true;
   elements.gameMessage.textContent = `Time! Your score: ${currentScore}`;
   
-  // Hide current game image and show end picture
-  elements.currentImage.classList.add("hidden");
-  elements.endPlaceholder.classList.remove("hidden");
+  // Hide current game image completely before showing end picture
+  if (elements.currentImage) {
+    elements.currentImage.classList.add("hidden");
+    elements.currentImage.classList.remove("visible");
+    elements.currentImage.src = ""; // Clear the image source
+  }
+  
+  // Show end picture
+  if (elements.endPlaceholder) {
+    elements.endPlaceholder.classList.remove("hidden");
+  }
 
   // Stop all background music and play end music
   if (backgroundMusic) {
@@ -246,7 +326,13 @@ function loadNextImage() {
   // Ensure we have a pool of images for this round where each appears once
   // before any repeats. When the pool is empty, refill it from the source list.
   if (!Array.isArray(remainingItems) || remainingItems.length === 0) {
+    // Shuffle the array for true randomness when refilling
     remainingItems = [...sourceItems];
+    // Fisher-Yates shuffle algorithm for true randomness
+    for (let i = remainingItems.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [remainingItems[i], remainingItems[j]] = [remainingItems[j], remainingItems[i]];
+    }
   }
 
   // Pick a random index from the remaining pool to avoid predictable order.
@@ -496,6 +582,13 @@ function wireEvents() {
   elements.startButton.addEventListener("click", () => {
     startRound();
   });
+
+  // Stop button to end game early
+  if (elements.stopButton) {
+    elements.stopButton.addEventListener("click", () => {
+      stopGame();
+    });
+  }
 
   // Support both click (tap) and press/hold semantics:
   // - mouse/touch down starts listening
