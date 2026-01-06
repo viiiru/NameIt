@@ -1,0 +1,25 @@
+# Git ignore file for NameIt game
+# This tells Git which files to NOT track
+
+# Operating system files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+*.tmp
+*.log
+
+# Node modules (if you add any later)
+node_modules/
+
+# Build files (if you add any later)
+dist/
+build/
