@@ -50,8 +50,8 @@ function initSpeechRecognition() {
 
   recognition = new SpeechRecognition();
   recognition.lang = "en-US";
-  recognition.interimResults = false;
-  recognition.maxAlternatives = 3;
+  recognition.interimResults = true; // Enable interim results for faster feedback
+  recognition.maxAlternatives = 1; // Reduce to 1 for faster processing
   recognition.continuous = false;
 
   recognition.onstart = () => {
@@ -90,13 +90,26 @@ function initSpeechRecognition() {
   recognition.onresult = (event) => {
     if (!acceptingAnswers || !currentItem) return;
 
-    const transcript = Array.from(event.results)
-      .map((res) => res[0]?.transcript || "")
-      .join(" ")
-      .trim()
-      .toLowerCase();
-
-    checkAnswer(transcript);
+    // Get the most recent result for faster processing
+    const result = event.results[event.results.length - 1];
+    
+    // Only process final results (not interim guesses)
+    if (result.isFinal) {
+      const transcript = result[0]?.transcript || "";
+      const normalizedTranscript = transcript.trim().toLowerCase();
+      
+      // Stop listening immediately after getting final result for faster response
+      if (isListening) {
+        try {
+          recognition.stop();
+        } catch {
+          // Ignore if already stopping
+        }
+      }
+      
+      checkAnswer(normalizedTranscript);
+    }
+    // Interim results are ignored - we only check final results for accuracy
   };
 
   // Only set status to ready, don't enable button until user starts a round
@@ -335,23 +348,27 @@ function loadNextImage() {
     }
   }
 
-  // Pick a random index from the remaining pool to avoid predictable order.
+  // Pick a random index from the remaining pool
+  // This ensures each image appears once before any repeats, with true randomness
   const randomIndex = Math.floor(Math.random() * remainingItems.length);
   currentItem = remainingItems[randomIndex];
   // Remove the used item so it won't appear again until the pool refills.
   remainingItems.splice(randomIndex, 1);
+  
+  // Debug: Log which image was selected (check browser console F12 to see)
+  console.log("Selected:", currentItem.id, "Remaining in pool:", remainingItems.length, "Total available:", sourceItems.length);
 
   elements.currentImage.classList.remove("visible");
   elements.currentImage.classList.add("hidden");
 
-  // small delay to allow animation reset
+  // Reduced delay for faster image switching
   setTimeout(() => {
     elements.currentImage.src = currentItem.src;
     elements.currentImage.alt = currentItem.id;
     elements.imagePlaceholder.classList.add("hidden");
     elements.currentImage.classList.remove("hidden");
     elements.currentImage.classList.add("visible");
-  }, 80);
+  }, 50); // Reduced from 80ms to 50ms for faster transitions
 }
 
 function normalizeAnswer(text) {
@@ -499,6 +516,14 @@ function beginListening() {
   if (!recognition || !acceptingAnswers || isListening) return;
 
   try {
+    // Stop any existing recognition first for faster restart
+    if (recognition && isListening) {
+      try {
+        recognition.stop();
+      } catch {
+        // Ignore
+      }
+    }
     recognition.start();
   } catch {
     // starting twice can throw; ignore

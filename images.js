@@ -7,7 +7,7 @@ const IMAGE_ITEMS = [
   {
     id: "apple",
     src: "images/apple.jpg",
-    answers: ["apple"],
+    answers: ["an apple", "apple"],
     category: "fruits",
   },
   {
@@ -25,26 +25,68 @@ const IMAGE_ITEMS = [
   {
     id: "dog",
     src: "images/dog.jpg",
-    answers: ["dog", "puppy"],
+    answers: ["a dog", "dog", "puppy"],
     category: "animals",
   },
   {
     id: "cat",
     src: "images/cat.jpg",
-    answers: ["cat", "kitten"],
+    answers: ["a cat", "cat", "kitten"],
     category: "animals",
   },
   {
     id: "cow",
     src: "images/cow.jpg",
-    answers: ["cow"],
+    answers: ["cow", "a cow!"],
     category: "animals",
   },
   {
     id: "sheep",
     src: "images/sheep.jpg",
-    answers: ["sheep", "lamb"],
+    answers: ["a sheep", "sheep", "a lamb", "lamb"],
     category: "animals",
+  },
+  {
+    id: "lion",
+    src: "images/lion.jpg",
+    answers: ["a lion", "lion"],
+    category: "animals",
+  },
+  {
+    id: "guinea pig",
+    src: "images/guinea pig.jpg",
+    answers: ["a guinea pig"],
+    category: "animals",
+  },
+  {
+    id: "elephant",
+    src: "images/elephant.jpg",
+    answers: ["an elephant", "elephant"],
+    category: "animals",
+  },
+  {
+    id: "giraffe",
+    src: "images/giraffe.jpg",
+    answers: ["a giraffe", "giraffe"],
+    category: "animals",
+  },
+  {
+    id: "zebra",
+    src: "images/zebra.jpg",
+    answers: ["a zebra", "zebra"],
+    category: "animals",
+  },
+  {
+    id: "crocodile",
+    src: "images/crocodile.jpg",
+    answers: ["a crocodile", "crocodile"],
+    category: "animals",
+  },
+  {
+    id: "persimmon",
+    src: "images/persimmon.jpg",
+    answers: ["a persimmon", "persimmon"],
+    category: "fruits",
   },
 ];
 
