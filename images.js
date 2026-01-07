@@ -25,13 +25,13 @@ const IMAGE_ITEMS = [
   {
     id: "dog",
     src: "images/dog.jpg",
-    answers: ["a dog", "dog", "puppy"],
+    answers: ["a dog", "dog", "puppy", "a puppy"],
     category: "animals",
   },
   {
     id: "cat",
     src: "images/cat.jpg",
-    answers: ["a cat", "cat", "kitten"],
+    answers: ["a cat", "cat", "kitten", "a kitty"],
     category: "animals",
   },
   {
