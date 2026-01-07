@@ -44,13 +44,18 @@
 
         <section class="image-stage">
           <div id="image-frame" class="image-frame">
-            <img id="current-image" class="image hidden" alt="Object to name" />
+            <div id="loading-indicator" class="loading-indicator hidden">
+              <div class="loading-spinner"></div>
+              <div>Loading images...</div>
+            </div>
+            <img id="current-image" class="image hidden" alt="Object to name" loading="lazy" />
             <div id="image-placeholder" class="image-placeholder">
               <img
                 id="start-image"
                 class="start-image"
                 src="image_first picture/thinking child.jpg"
                 alt="Child thinking about the answer"
+                loading="eager"
               />
             </div>
             <div id="end-placeholder" class="image-placeholder hidden">
@@ -59,6 +64,7 @@
                 class="start-image"
                 src="image_first picture/endpicture.jpg"
                 alt="End of game"
+                loading="lazy"
               />
             </div>
           </div>

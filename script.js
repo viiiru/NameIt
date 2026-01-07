@@ -10,6 +10,7 @@ const elements = {
   currentImage: document.getElementById("current-image"),
   imagePlaceholder: document.getElementById("image-placeholder"),
   endPlaceholder: document.getElementById("end-placeholder"),
+  loadingIndicator: document.getElementById("loading-indicator"),
   startButton: document.getElementById("start-button"),
   stopButton: document.getElementById("stop-button"),
   speakButton: document.getElementById("speak-button"),
@@ -358,17 +359,48 @@ function loadNextImage() {
   // Debug: Log which image was selected (check browser console F12 to see)
   console.log("Selected:", currentItem.id, "Remaining in pool:", remainingItems.length, "Total available:", sourceItems.length);
 
-  elements.currentImage.classList.remove("visible");
-  elements.currentImage.classList.add("hidden");
-
-  // Reduced delay for faster image switching
-  setTimeout(() => {
-    elements.currentImage.src = currentItem.src;
-    elements.currentImage.alt = currentItem.id;
+  // Set image source immediately - browser cache will make it instant if preloaded
+  elements.currentImage.src = currentItem.src;
+  elements.currentImage.alt = currentItem.id;
+  
+  // Check if image is already loaded (cached) - if so, show immediately
+  if (elements.currentImage.complete && elements.currentImage.naturalWidth > 0) {
+    // Image was cached and ready - show instantly
     elements.imagePlaceholder.classList.add("hidden");
     elements.currentImage.classList.remove("hidden");
     elements.currentImage.classList.add("visible");
-  }, 50); // Reduced from 80ms to 50ms for faster transitions
+    if (elements.loadingIndicator) {
+      elements.loadingIndicator.classList.add("hidden");
+    }
+  } else {
+    // Image needs to load - show loading indicator
+    elements.currentImage.classList.remove("visible");
+    elements.currentImage.classList.add("hidden");
+    if (elements.loadingIndicator) {
+      elements.loadingIndicator.classList.remove("hidden");
+    }
+    
+    // When image loads, show it immediately
+    const showImage = () => {
+      if (elements.loadingIndicator) {
+        elements.loadingIndicator.classList.add("hidden");
+      }
+      elements.imagePlaceholder.classList.add("hidden");
+      elements.currentImage.classList.remove("hidden");
+      elements.currentImage.classList.add("visible");
+    };
+    
+    // Use load event for when image finishes loading
+    elements.currentImage.addEventListener("load", showImage, { once: true });
+    elements.currentImage.addEventListener("error", () => {
+      if (elements.loadingIndicator) {
+        elements.loadingIndicator.classList.add("hidden");
+      }
+      if (elements.gameMessage) {
+        elements.gameMessage.textContent = `Image not found: ${currentItem.id}`;
+      }
+    }, { once: true });
+  }
 }
 
 function normalizeAnswer(text) {
@@ -496,7 +528,16 @@ function handleCorrectAnswer(transcript) {
 
   playCorrectSound();
 
-  // Immediately move to next image
+  // Stop recognition immediately to prepare for next image
+  if (recognition && isListening) {
+    try {
+      recognition.stop();
+    } catch {
+      // Ignore if already stopping
+    }
+  }
+
+  // Immediately move to next image (no delay)
   loadNextImage();
 }
 
@@ -513,20 +554,17 @@ function handleWrongAnswer(transcript) {
 }
 
 function beginListening() {
-  if (!recognition || !acceptingAnswers || isListening) return;
+  if (!recognition || !acceptingAnswers) return;
+  
+  // If already listening, don't restart (prevents delays)
+  if (isListening) return;
 
   try {
-    // Stop any existing recognition first for faster restart
-    if (recognition && isListening) {
-      try {
-        recognition.stop();
-      } catch {
-        // Ignore
-      }
-    }
+    // Start recognition immediately - browser handles cleanup internally
     recognition.start();
-  } catch {
-    // starting twice can throw; ignore
+  } catch (e) {
+    // If already started or other error, ignore and continue
+    // The recognition.onend handler will reset isListening
   }
 }
 
@@ -657,12 +695,39 @@ function wireEvents() {
   }
 }
 
+function preloadImages() {
+  // Preload all images aggressively for faster gameplay
+  if (!Array.isArray(IMAGE_ITEMS)) return;
+  
+  // Preload images with higher priority
+  IMAGE_ITEMS.forEach((item) => {
+    const img = new Image();
+    // Force browser to cache by setting src immediately
+    img.src = item.src;
+    // Use decode() if available for better performance
+    if (img.decode) {
+      img.decode().catch(() => {
+        // Fallback if decode() fails - image.src already set above
+      });
+    }
+  });
+  
+  // Also preload start and end images
+  const startImg = new Image();
+  startImg.src = "image_first picture/thinking child.jpg";
+  const endImg = new Image();
+  endImg.src = "image_first picture/endpicture.jpg";
+}
+
 function init() {
   resetGameState();
   initSpeechRecognition();
   renderLibraryList();
   wireEvents();
   initCategorySelect();
+  
+  // Preload images in background (non-blocking)
+  preloadImages();
 
   // Try to load a custom "level up" sound if the file exists.
   // Your sound file is expected at: audio/level-up.mp3.wav
@@ -689,6 +754,9 @@ function init() {
   } catch {
     endMusic = null;
   }
+  
+  // Preload images in background (non-blocking) for faster gameplay
+  // (already called earlier in init, but keeping here for clarity)
 }
 
 window.addEventListener("DOMContentLoaded", init);
