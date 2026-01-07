@@ -112,7 +112,12 @@ function initSpeechRecognition() {
   };
 
   recognition.onresult = (event) => {
-    if (!acceptingAnswers || !currentItem) return;
+    if (!acceptingAnswers || !currentItem) {
+      console.log("Recognition result ignored - not accepting answers or no current item");
+      return;
+    }
+
+    console.log("Recognition result received:", event.results.length, "results");
 
     // Process ALL results, including interim ones, for fastest response
     // Check the most recent result first (last in array)
@@ -122,7 +127,11 @@ function initSpeechRecognition() {
       
       if (!transcript.trim()) continue;
       
-      const normalizedTranscript = transcript.trim().toLowerCase();
+      console.log("Processing transcript:", transcript, "isFinal:", result.isFinal);
+      
+      // Keep original transcript for display, normalize for comparison
+      const originalTranscript = transcript.trim();
+      const normalizedTranscript = originalTranscript.toLowerCase();
       
       // Check if this matches the answer - process immediately for speed
       const normRecognized = normalizeAnswer(normalizedTranscript);
@@ -147,8 +156,8 @@ function initSpeechRecognition() {
           }
         }
         
-        // Process the answer immediately
-        handleCorrectAnswer(normalizedTranscript);
+        // Process the answer immediately (use original transcript for display)
+        handleCorrectAnswer(originalTranscript);
         return; // Exit early - we found a match
       }
       
@@ -170,8 +179,8 @@ function initSpeechRecognition() {
           }
         }
         
-        // Check answer (will handle wrong answer)
-        checkAnswer(normalizedTranscript);
+        // Check answer (will handle wrong answer - use original transcript for display)
+        checkAnswer(originalTranscript);
         return; // Processed final result, exit
       }
     }
@@ -618,15 +627,23 @@ function handleWrongAnswer(transcript) {
 }
 
 function beginListening() {
-  if (!recognition || !acceptingAnswers) return;
+  if (!recognition || !acceptingAnswers) {
+    console.log("Cannot start listening - recognition:", !!recognition, "acceptingAnswers:", acceptingAnswers);
+    return;
+  }
   
   // If already listening, don't restart (prevents delays)
-  if (isListening) return;
+  if (isListening) {
+    console.log("Already listening, skipping restart");
+    return;
+  }
 
   try {
+    console.log("Starting speech recognition...");
     // Start recognition immediately - browser handles cleanup internally
     recognition.start();
   } catch (e) {
+    console.log("Error starting recognition:", e);
     // If already started or other error, ignore and continue
     // The recognition.onend handler will reset isListening
   }
