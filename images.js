@@ -43,7 +43,7 @@ const IMAGE_ITEMS = [
   {
     id: "sheep",
     src: "images/sheep.jpg",
-    answers: ["a sheep", "sheep", "a lamb", "lamb"],
+    answers: ["a sheep", "sheep", "a lamb", "lamb", "a sheepy"],
     category: "animals",
   },
   {
