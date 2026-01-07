@@ -54,7 +54,7 @@ const IMAGE_ITEMS = [
   },
   {
     id: "guinea pig",
-    src: "images/guinea pig.jpg",
+    src: "images/guinea%20pig.jpg",
     answers: ["a guinea pig"],
     category: "animals",
   },

@@ -34,6 +34,7 @@ let activeCategory = "all";
 let backgroundMusic = null;
 let endMusic = null;
 let isMuted = false;
+let recognitionTimeoutId = null; // Timeout to force-stop recognition if it takes too long
 
 // Web Speech API setup (Chrome / Edge; Safari uses webkitSpeechRecognition)
 const SpeechRecognition =
@@ -54,12 +55,29 @@ function initSpeechRecognition() {
   recognition.interimResults = true; // Enable interim results for faster feedback
   recognition.maxAlternatives = 1; // Reduce to 1 for faster processing
   recognition.continuous = false;
+  // Make recognition stop faster by reducing silence timeout
+  // Note: Some browsers may not support this, but it helps when available
 
   recognition.onstart = () => {
     isListening = true;
     elements.speechStatus.textContent = "Speech: listening…";
     elements.speechStatus.classList.remove("status-error");
     elements.speechStatus.classList.add("status-ok");
+    
+    // Set a timeout to force-stop recognition if it takes too long (2 seconds max)
+    // This prevents the game from hanging if recognition doesn't respond
+    if (recognitionTimeoutId) {
+      clearTimeout(recognitionTimeoutId);
+    }
+    recognitionTimeoutId = setTimeout(() => {
+      if (isListening && recognition) {
+        try {
+          recognition.stop();
+        } catch {
+          // Ignore errors
+        }
+      }
+    }, 2000); // Force stop after 2 seconds
   };
 
   recognition.onerror = (event) => {
@@ -79,6 +97,11 @@ function initSpeechRecognition() {
 
   recognition.onend = () => {
     isListening = false;
+    // Clear any pending timeout
+    if (recognitionTimeoutId) {
+      clearTimeout(recognitionTimeoutId);
+      recognitionTimeoutId = null;
+    }
     if (acceptingAnswers) {
       elements.speechStatus.textContent = "Speech: ready";
       elements.speechStatus.classList.add("status-ok");
@@ -91,26 +114,67 @@ function initSpeechRecognition() {
   recognition.onresult = (event) => {
     if (!acceptingAnswers || !currentItem) return;
 
-    // Get the most recent result for faster processing
-    const result = event.results[event.results.length - 1];
-    
-    // Only process final results (not interim guesses)
-    if (result.isFinal) {
+    // Process ALL results, including interim ones, for fastest response
+    // Check the most recent result first (last in array)
+    for (let i = event.results.length - 1; i >= 0; i--) {
+      const result = event.results[i];
       const transcript = result[0]?.transcript || "";
+      
+      if (!transcript.trim()) continue;
+      
       const normalizedTranscript = transcript.trim().toLowerCase();
       
-      // Stop listening immediately after getting final result for faster response
-      if (isListening) {
-        try {
-          recognition.stop();
-        } catch {
-          // Ignore if already stopping
+      // Check if this matches the answer - process immediately for speed
+      const normRecognized = normalizeAnswer(normalizedTranscript);
+      const accepted = currentItem.answers.some(
+        (ans) => normalizeAnswer(ans) === normRecognized
+      );
+      
+      // If we found a match (even in interim results), process it immediately
+      if (accepted) {
+        // Clear timeout since we got a result
+        if (recognitionTimeoutId) {
+          clearTimeout(recognitionTimeoutId);
+          recognitionTimeoutId = null;
         }
+        
+        // Stop recognition immediately to prevent further processing
+        if (isListening) {
+          try {
+            recognition.stop();
+          } catch {
+            // Ignore if already stopping
+          }
+        }
+        
+        // Process the answer immediately
+        handleCorrectAnswer(normalizedTranscript);
+        return; // Exit early - we found a match
       }
       
-      checkAnswer(normalizedTranscript);
+      // If this is a final result (not interim), process it even if no match yet
+      // This handles cases where the word was said but doesn't match
+      if (result.isFinal) {
+        // Clear timeout since we got a result
+        if (recognitionTimeoutId) {
+          clearTimeout(recognitionTimeoutId);
+          recognitionTimeoutId = null;
+        }
+        
+        // Stop listening after final result
+        if (isListening) {
+          try {
+            recognition.stop();
+          } catch {
+            // Ignore if already stopping
+          }
+        }
+        
+        // Check answer (will handle wrong answer)
+        checkAnswer(normalizedTranscript);
+        return; // Processed final result, exit
+      }
     }
-    // Interim results are ignored - we only check final results for accuracy
   };
 
   // Only set status to ready, don't enable button until user starts a round
@@ -570,6 +634,13 @@ function beginListening() {
 
 function stopListening() {
   if (!recognition || !isListening) return;
+  
+  // Clear any pending timeout
+  if (recognitionTimeoutId) {
+    clearTimeout(recognitionTimeoutId);
+    recognitionTimeoutId = null;
+  }
+  
   try {
     recognition.stop();
   } catch {
@@ -714,9 +785,9 @@ function preloadImages() {
   
   // Also preload start and end images
   const startImg = new Image();
-  startImg.src = "image_first picture/thinking child.jpg";
+  startImg.src = "image_first%20picture/thinking%20child.jpg";
   const endImg = new Image();
-  endImg.src = "image_first picture/endpicture.jpg";
+  endImg.src = "image_first%20picture/endpicture.jpg";
 }
 
 function init() {
@@ -750,7 +821,7 @@ function init() {
 
   // End music (plays when time is up).
   try {
-    endMusic = new Audio("audio_endmusic/end music.wav");
+    endMusic = new Audio("audio_endmusic/end%20music.wav");
   } catch {
     endMusic = null;
   }
