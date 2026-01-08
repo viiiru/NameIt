@@ -597,7 +597,7 @@ function toggleMute() {
 function handleCorrectAnswer(transcript) {
   currentScore += 1;
   elements.score.textContent = String(currentScore);
-  elements.lastResult.textContent = `✔ "${transcript}"`;
+  elements.lastResult.textContent = `"${transcript}"`;
   elements.lastResult.classList.remove("status-error");
   elements.lastResult.classList.add("status-ok");
   elements.gameMessage.textContent = "";
@@ -624,7 +624,7 @@ function handleCorrectAnswer(transcript) {
 }
 
 function handleWrongAnswer(transcript) {
-  elements.lastResult.textContent = `✖ "${transcript}"`;
+  elements.lastResult.textContent = `"${transcript}"`;
   elements.lastResult.classList.remove("status-ok");
   elements.lastResult.classList.add("status-error");
 
@@ -832,9 +832,9 @@ function preloadImages() {
   
   // Also preload start and end images
   const startImg = new Image();
-  startImg.src = "image_first%20picture/thinking%20child.jpg";
+  startImg.src = "assets/thinking%20child.jpg";
   const endImg = new Image();
-  endImg.src = "image_first%20picture/endpicture.jpg";
+  endImg.src = "assets/endpicture.jpg";
 }
 
 function init() {
@@ -857,7 +857,7 @@ function init() {
 
   // Background start music (louder when idle, softer during play).
   try {
-    backgroundMusic = new Audio("audio_startmusic/audio_startmusic.wav");
+    backgroundMusic = new Audio("audio_start/audio_startmusic.wav");
     backgroundMusic.loop = true;
     setBackgroundVolume("idle");
     // We don't auto-play here because some browsers block it.
@@ -868,7 +868,7 @@ function init() {
 
   // End music (plays when time is up).
   try {
-    endMusic = new Audio("audio_endmusic/end%20music.wav");
+    endMusic = new Audio("audio_end/end%20music.wav");
   } catch {
     endMusic = null;
   }
