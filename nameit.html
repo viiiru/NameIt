@@ -85,10 +85,12 @@
 
         <section class="controls">
           <button id="start-button" class="btn primary">Start Round</button>
-          <button id="stop-button" class="btn secondary" style="display: none;">Stop Game</button>
-          <button id="skip-button" class="btn secondary" style="display: none;">Skip</button>
-          <button id="sound-toggle-button" class="btn secondary">Sound: On</button>
+          <div class="game-controls-group">
+            <button id="stop-button" class="btn secondary" style="display: none;">Stop Game</button>
+            <button id="skip-button" class="btn skip" style="display: none;">Skip</button>
+          </div>
         </section>
+        <button id="sound-toggle-button" class="btn secondary sound-button">Sound: On</button>
 
         <section class="status">
           <div id="speech-status" class="status-line">Speech: idle</div>

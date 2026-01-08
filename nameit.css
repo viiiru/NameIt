@@ -317,6 +317,13 @@ body {
   justify-content: center;
   flex-wrap: wrap;
   flex-shrink: 0;
+  align-items: center;
+}
+
+.game-controls-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 
 .btn {
@@ -355,6 +362,27 @@ body {
   transform: translateY(-1px);
   box-shadow: 0 12px 32px rgba(14, 165, 233, 0.9);
   background: linear-gradient(135deg, #4ade80, #38bdf8);
+}
+
+.btn.skip {
+  background: linear-gradient(135deg, #f97316, #ea580c);
+  color: #0b1020;
+  border: 1px solid rgba(249, 115, 22, 0.8);
+  box-shadow: 0 8px 25px rgba(249, 115, 22, 0.6);
+}
+
+.btn.skip:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 32px rgba(249, 115, 22, 0.9);
+  background: linear-gradient(135deg, #fb923c, #f97316);
+}
+
+.sound-button {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 100;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
 }
 
 .btn:disabled {

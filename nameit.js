@@ -248,8 +248,7 @@ function startRound() {
   resetGameState();
   acceptingAnswers = true;
   if (elements.startButton) {
-    elements.startButton.textContent = "Playing…";
-    elements.startButton.disabled = true;
+    elements.startButton.style.display = "none"; // Hide "Play Again" button
   }
   // Show stop button, hide start button text
   if (elements.stopButton) {
@@ -313,9 +312,13 @@ function stopGame() {
     recognition.stop();
   }
 
-  elements.startButton.disabled = false;
-  elements.startButton.textContent = "Start Round";
-  // Hide stop button, show start button
+  // Show start button again
+  if (elements.startButton) {
+    elements.startButton.style.display = "inline-flex";
+    elements.startButton.disabled = false;
+    elements.startButton.textContent = "Start Round";
+  }
+  // Hide stop button
   if (elements.stopButton) {
     elements.stopButton.style.display = "none";
   }
@@ -372,9 +375,13 @@ function endRound() {
     recognition.stop();
   }
 
-  elements.startButton.disabled = false;
-  elements.startButton.textContent = "Play Again";
-  // Hide stop button, show start button
+  // Show start button again
+  if (elements.startButton) {
+    elements.startButton.style.display = "inline-flex";
+    elements.startButton.disabled = false;
+    elements.startButton.textContent = "Play Again";
+  }
+  // Hide stop button
   if (elements.stopButton) {
     elements.stopButton.style.display = "none";
   }
@@ -462,7 +469,8 @@ function loadNextImage() {
   console.log("Selected:", currentItem.id, "Remaining in pool:", remainingItems.length, "Total available:", sourceItems.length);
 
   // Set image source immediately - browser cache will make it instant if preloaded
-  elements.currentImage.src = currentItem.src;
+  // Use encodeURI to handle any special characters in paths
+  elements.currentImage.src = encodeURI(currentItem.src);
   elements.currentImage.alt = currentItem.id;
   
   // Check if image is already loaded (cached) - if so, show immediately
@@ -810,6 +818,36 @@ function wireEvents() {
       skipWord();
     });
   }
+}
+
+function skipWord() {
+  if (!acceptingAnswers || !currentItem) return;
+  
+  // Stop current recognition
+  if (recognition && isListening) {
+    try {
+      recognition.stop();
+    } catch (e) {
+      // Ignore errors if already stopping
+    }
+  }
+  
+  // Clear any pending timeout
+  if (recognitionTimeoutId) {
+    clearTimeout(recognitionTimeoutId);
+    recognitionTimeoutId = null;
+  }
+  
+  // Show skipped message
+  elements.lastResult.textContent = "Skipped";
+  elements.lastResult.classList.remove("status-ok", "status-error");
+  elements.gameMessage.textContent = "";
+  
+  // Reset image frame animation
+  elements.imageFrame.classList.remove("correct", "wrong");
+  
+  // Load next image immediately
+  loadNextImage();
 
   if (elements.soundToggleButton) {
     elements.soundToggleButton.addEventListener("click", () => {
