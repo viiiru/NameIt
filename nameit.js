@@ -862,8 +862,6 @@ function skipWord() {
   // Load next image immediately
   loadNextImage();
 }
-
-  // Update time display when duration changes (but only if not playing)
   if (elements.durationSelect) {
     elements.durationSelect.addEventListener("change", () => {
       if (!acceptingAnswers) {
