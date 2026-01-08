@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NameIt - Voice Vocabulary Game</title>
+    <meta name="description" content="NameIt - A fast-paced voice-controlled vocabulary game. Say what you see and beat the clock! Perfect for learning and practicing vocabulary." />
+    <meta name="keywords" content="vocabulary game, voice game, speech recognition, educational game, learning game, word game" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="NameIt - Voice Vocabulary Game" />
+    <meta property="og:description" content="Say what you see. Beat the clock. A fast-paced voice-controlled vocabulary game!" />
+    
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="NameIt - Voice Vocabulary Game" />
+    <meta name="twitter:description" content="Say what you see. Beat the clock. A fast-paced voice-controlled vocabulary game!" />
+    
+    <link rel="stylesheet" href="nameit.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="header">
+        <h1 class="title">NameIt</h1>
+        <p class="subtitle">Say what you see. Beat the clock.</p>
+      </header>
+
+      <main class="game">
+        <section class="hud">
+          <div class="hud-item">
+            <span class="hud-label">Time</span>
+            <span id="time-remaining" class="hud-value">30</span>
+          </div>
+          <div class="hud-item">
+            <span class="hud-label">Score</span>
+            <span id="score" class="hud-value">0</span>
+          </div>
+          <div class="hud-item">
+            <span class="hud-label">Category</span>
+            <select id="category-select" class="hud-select">
+              <option value="all">All</option>
+            </select>
+          </div>
+          <div class="hud-item">
+            <span class="hud-label">Duration</span>
+            <select id="duration-select" class="hud-select">
+              <option value="30">30s</option>
+              <option value="60">60s</option>
+            </select>
+          </div>
+        </section>
+
+        <section class="last-word-display">
+          <div id="last-result" class="last-word">–</div>
+        </section>
+
+        <section class="image-stage">
+          <div id="image-frame" class="image-frame">
+            <div id="loading-indicator" class="loading-indicator hidden">
+              <div class="loading-spinner"></div>
+              <div>Loading images...</div>
+            </div>
+            <img id="current-image" class="image hidden" alt="Object to name" loading="lazy" />
+            <div id="image-placeholder" class="image-placeholder">
+              <img
+                id="start-image"
+                class="start-image"
+                src="assets/thinking%20child.jpg"
+                alt="Child thinking about the answer"
+                loading="eager"
+              />
+            </div>
+            <div id="end-placeholder" class="image-placeholder hidden">
+              <img
+                id="end-image"
+                class="start-image"
+                src="assets/endpicture.jpg"
+                alt="End of game"
+                loading="lazy"
+              />
+            </div>
+          </div>
+        </section>
+
+        <section class="controls">
+          <button id="start-button" class="btn primary">Start Round</button>
+          <button id="stop-button" class="btn secondary" style="display: none;">Stop Game</button>
+          <button id="speak-button" class="btn secondary" disabled>Hold &amp; Speak</button>
+          <button id="sound-toggle-button" class="btn secondary">Sound: On</button>
+        </section>
+
+        <section class="status">
+          <div id="speech-status" class="status-line">Speech: idle</div>
+          <div id="game-message" class="status-line"></div>
+        </section>
+
+        <section class="library">
+          <h2 class="section-title">Image Library</h2>
+          <p class="library-help">
+            You can extend the game by adding more images. Put your image files in the
+            <code>images/</code> folder and register them in <code>images.js</code>.
+          </p>
+          <ul id="library-list" class="library-list"></ul>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <span>Built for fast, voice-controlled vocabulary practice.</span>
+      </footer>
+    </div>
+
+    <script src="nameit-images.js"></script>
+    <script src="nameit.js"></script>
+  </body>
+  </html>
+
