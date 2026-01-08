@@ -30,6 +30,10 @@ document.addEventListener('DOMContentLoaded', () => {
 function handleGameClick(gameName) {
   if (gameName === 'nameit') {
     startNameItGame();
+  } else if (gameName === 'typeit') {
+    window.location.href = 'typeit.html';
+  } else if (gameName === 'equation-pyramid') {
+    window.location.href = 'equation-pyramid.html';
   }
 }
 

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Type It - Typing Vocabulary Game</title>
+    <meta name="description" content="Type It - A fast-paced typing vocabulary game. Type what you see and beat the clock!" />
+    <link rel="stylesheet" href="typeit.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="header">
+        <a href="index.html" class="back-button" title="Back to Fun Games">← Back</a>
+        <h1 class="title">Type It</h1>
+        <p class="subtitle">Type what you see. Beat the clock.</p>
+      </header>
+
+      <main class="game">
+        <section class="hud">
+          <div class="hud-item">
+            <span class="hud-label">Time</span>
+            <span id="time-remaining" class="hud-value">30</span>
+          </div>
+          <div class="hud-item">
+            <span class="hud-label">Score</span>
+            <span id="score" class="hud-value">0</span>
+          </div>
+          <div class="hud-item">
+            <span class="hud-label">Category</span>
+            <select id="category-select" class="hud-select">
+              <option value="all">All</option>
+            </select>
+          </div>
+          <div class="hud-item">
+            <span class="hud-label">Duration</span>
+            <select id="duration-select" class="hud-select">
+              <option value="30">30s</option>
+              <option value="60">60s</option>
+            </select>
+          </div>
+        </section>
+
+        <section class="last-word-display">
+          <div id="last-result" class="last-word">–</div>
+        </section>
+
+        <section class="image-stage">
+          <div id="image-frame" class="image-frame">
+            <div id="loading-indicator" class="loading-indicator hidden">
+              <div class="loading-spinner"></div>
+              <div>Loading images...</div>
+            </div>
+            <img id="current-image" class="image hidden" alt="Object to name" loading="lazy" />
+            <div id="image-placeholder" class="image-placeholder">
+              <img
+                id="start-image"
+                class="start-image"
+                src="assets/thinking%20child.jpg"
+                alt="Child thinking about the answer"
+                loading="eager"
+              />
+            </div>
+            <div id="end-placeholder" class="image-placeholder hidden">
+              <img
+                id="end-image"
+                class="start-image"
+                src="assets/endpicture.jpg"
+                alt="End of game"
+                loading="lazy"
+              />
+            </div>
+          </div>
+        </section>
+
+        <section class="controls">
+          <button id="start-button" class="btn primary">Start Round</button>
+          <button id="stop-button" class="btn secondary" style="display: none;">Stop Game</button>
+          <input 
+            type="text" 
+            id="answer-input" 
+            class="answer-input" 
+            placeholder="Type your answer here..." 
+            disabled
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <button id="sound-toggle-button" class="btn secondary">Sound: On</button>
+        </section>
+
+        <section class="status">
+          <div id="game-message" class="status-line"></div>
+        </section>
+
+        <section class="library">
+          <h2 class="section-title">Image Library</h2>
+          <p class="library-help">
+            You can extend the game by adding more images. Put your image files in the
+            <code>images/</code> folder and register them in <code>nameit-images.js</code>.
+          </p>
+          <ul id="library-list" class="library-list"></ul>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <span>Built for fast, typing vocabulary practice.</span>
+      </footer>
+    </div>
+
+    <script src="nameit-images.js"></script>
+    <script src="typeit.js"></script>
+  </body>
+</html>

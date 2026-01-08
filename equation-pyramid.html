@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Equation Pyramid - Math Puzzle Game</title>
+    <meta name="description" content="Equation Pyramid - Solve math puzzles by combining numbers to reach the target!" />
+    <link rel="stylesheet" href="equation-pyramid.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="header">
+        <a href="index.html" class="back-button" title="Back to Fun Games">← Back</a>
+        <h1 class="title">Equation Pyramid</h1>
+        <p class="subtitle">Combine numbers to reach the target!</p>
+      </header>
+
+      <main class="game">
+        <section class="hud">
+          <div class="hud-item">
+            <span class="hud-label">Time</span>
+            <span id="time-remaining" class="hud-value">60</span>
+          </div>
+          <div class="hud-item">
+            <span class="hud-label">Score</span>
+            <span id="score" class="hud-value">0</span>
+          </div>
+          <div class="hud-item">
+            <span class="hud-label">Target</span>
+            <span id="target-value" class="hud-value">0</span>
+          </div>
+        </section>
+
+        <section class="pyramid-container">
+          <div id="pyramid-display" class="pyramid-display"></div>
+        </section>
+
+        <section class="last-word-display">
+          <div id="last-result" class="last-word">–</div>
+        </section>
+
+        <section class="controls">
+          <button id="start-button" class="btn primary">Start Round</button>
+          <button id="stop-button" class="btn secondary" style="display: none;">Stop Game</button>
+          <input 
+            type="text" 
+            id="answer-input" 
+            class="answer-input" 
+            placeholder="Type your answer (e.g., +1, /4, x3)" 
+            disabled
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <button id="sound-toggle-button" class="btn secondary">Sound: On</button>
+        </section>
+
+        <section class="status">
+          <div id="game-message" class="status-line"></div>
+          <div id="hint-message" class="status-line hint">Example: Start with a number, then use operations like +5, -3, x2, /4</div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <span>Built for math puzzle solving practice.</span>
+      </footer>
+    </div>
+
+    <script src="equation-pyramid.js"></script>
+  </body>
+</html>
