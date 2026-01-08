@@ -14,7 +14,7 @@ const elements = {
   startButton: document.getElementById("start-button"),
   stopButton: document.getElementById("stop-button"),
   skipButton: document.getElementById("skip-button"),
-  speechStatus: document.getElementById("speech-status"),
+  quitButton: document.getElementById("quit-button"),
   gameMessage: document.getElementById("game-message"),
   libraryList: document.getElementById("library-list"),
   categorySelect: document.getElementById("category-select"),
@@ -43,9 +43,7 @@ let recognition = null;
 
 function initSpeechRecognition() {
   if (!SpeechRecognition) {
-    elements.speechStatus.textContent =
-      "Speech: not available in this browser. Try Chrome or Edge.";
-    elements.speechStatus.classList.add("status-error");
+    console.warn("Speech recognition not available in this browser. Try Chrome or Edge.");
     return;
   }
 
@@ -59,9 +57,6 @@ function initSpeechRecognition() {
 
   recognition.onstart = () => {
     isListening = true;
-    elements.speechStatus.textContent = "Speech: listening…";
-    elements.speechStatus.classList.remove("status-error");
-    elements.speechStatus.classList.add("status-ok");
     
     // Set a timeout to force-stop recognition if it takes too long (5 seconds max)
     // This prevents the game from hanging if recognition doesn't respond
@@ -85,20 +80,8 @@ function initSpeechRecognition() {
     
     // Handle permission denied errors more gracefully
     if (event.error === "not-allowed" || event.error === "service-not-allowed") {
-      elements.speechStatus.textContent = "Microphone permission needed. Please allow access.";
-      elements.speechStatus.classList.remove("status-ok");
-      elements.speechStatus.classList.add("status-error");
       // Try to request permission again
       checkMicrophonePermission();
-    } else if (event.error === "no-speech") {
-      // No speech detected - this is normal, just reset status
-      elements.speechStatus.textContent = "Speech: ready";
-      elements.speechStatus.classList.add("status-ok");
-      elements.speechStatus.classList.remove("status-error");
-    } else {
-      elements.speechStatus.textContent = `Speech error: ${event.error}. Try again.`;
-      elements.speechStatus.classList.remove("status-ok");
-      elements.speechStatus.classList.add("status-error");
     }
   };
 
@@ -108,14 +91,6 @@ function initSpeechRecognition() {
     if (recognitionTimeoutId) {
       clearTimeout(recognitionTimeoutId);
       recognitionTimeoutId = null;
-    }
-    if (acceptingAnswers) {
-      elements.speechStatus.textContent = "Speech: ready";
-      elements.speechStatus.classList.add("status-ok");
-      // Don't auto-restart - let the user control it with the button
-    } else {
-      elements.speechStatus.textContent = "Speech: idle";
-      elements.speechStatus.classList.remove("status-ok");
     }
   };
 
@@ -200,9 +175,7 @@ function initSpeechRecognition() {
     }
   };
 
-  // Only set status to ready
-  elements.speechStatus.textContent = "Speech: ready (click Start to play)";
-  elements.speechStatus.classList.add("status-ok");
+  // Speech recognition initialized
 }
 
 function resetGameState() {
@@ -547,9 +520,8 @@ function loadNextImage() {
       if (elements.loadingIndicator) {
         elements.loadingIndicator.classList.add("hidden");
       }
-      if (elements.gameMessage) {
-        elements.gameMessage.textContent = `Image not found: ${currentItem.id}`;
-      }
+      // Image not found - just log it, don't show message to user
+      console.error(`Image not found: ${currentItem.id}`);
     }, { once: true });
   }
 }
@@ -889,30 +861,7 @@ function skipWord() {
   
   // Load next image immediately
   loadNextImage();
-
-  // Add sound button listeners for both inline and fixed buttons
-  const soundButtonInline = document.getElementById("sound-toggle-button");
-  const soundButtonFixed = document.getElementById("sound-toggle-button-fixed");
-  
-  if (soundButtonInline) {
-    soundButtonInline.addEventListener("click", () => {
-      toggleMute();
-      // Update both buttons
-      if (soundButtonFixed) {
-        soundButtonFixed.textContent = soundButtonInline.textContent;
-      }
-    });
-  }
-  
-  if (soundButtonFixed) {
-    soundButtonFixed.addEventListener("click", () => {
-      toggleMute();
-      // Update both buttons
-      if (soundButtonInline) {
-        soundButtonInline.textContent = soundButtonFixed.textContent;
-      }
-    });
-  }
+}
 
   // Update time display when duration changes (but only if not playing)
   if (elements.durationSelect) {
@@ -1004,11 +953,32 @@ async function checkMicrophonePermission() {
     console.log("Microphone permission granted");
   } catch (error) {
     console.error("Microphone permission error:", error);
-    if (elements.speechStatus) {
-      elements.speechStatus.textContent = "Microphone permission needed. Please allow access.";
-      elements.speechStatus.classList.add("status-error");
-    }
   }
+}
+
+function quitGame() {
+  // Stop the game and return to main menu
+  if (roundTimerId) {
+    clearInterval(roundTimerId);
+    roundTimerId = null;
+  }
+  
+  if (recognition && isListening) {
+    recognition.stop();
+  }
+  
+  // Stop all music
+  if (backgroundMusic) {
+    backgroundMusic.pause();
+    backgroundMusic.currentTime = 0;
+  }
+  if (endMusic) {
+    endMusic.pause();
+    endMusic.currentTime = 0;
+  }
+  
+  // Go back to main menu
+  window.location.href = 'index.html';
 }
 
 window.addEventListener("DOMContentLoaded", init);

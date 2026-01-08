@@ -91,12 +91,11 @@
           <div class="game-controls-group" style="display: none;">
             <button id="stop-button" class="btn secondary">Stop Game</button>
             <button id="skip-button" class="btn skip">Skip</button>
+            <button id="quit-button" class="btn quit">Quit Game</button>
           </div>
         </section>
-        <button id="sound-toggle-button-fixed" class="btn secondary sound-button" style="display: none;">Sound: On</button>
 
         <section class="status">
-          <div id="speech-status" class="status-line">Speech: idle</div>
           <div id="game-message" class="status-line"></div>
         </section>
 
@@ -112,8 +111,10 @@
 
       <footer class="footer">
         <span>Built for fast, voice-controlled vocabulary practice.</span>
-        <a href="index.html" class="back-button" title="Back to Fun Games">← Back to Fun Games</a>
       </footer>
+      
+      <a href="index.html" class="back-button menu-button" title="Back to Fun Games">← Menu</a>
+      <button id="sound-toggle-button-fixed" class="btn secondary sound-button">Sound: On</button>
     </div>
 
     <script src="nameit-images.js"></script>

@@ -412,7 +412,7 @@ body {
 
 .sound-button {
   position: fixed;
-  bottom: 70px;
+  bottom: 20px;
   right: 20px;
   z-index: 100;
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
@@ -425,6 +425,27 @@ body {
   transform: translateY(-1px);
   box-shadow: 0 12px 32px rgba(2, 132, 199, 0.9);
   background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+}
+
+.menu-button {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 100;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+}
+
+.btn.quit {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: #0b1020;
+  border: 1px solid rgba(239, 68, 68, 0.8);
+  box-shadow: 0 8px 25px rgba(239, 68, 68, 0.6);
+}
+
+.btn.quit:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 32px rgba(220, 38, 38, 0.9);
+  background: linear-gradient(135deg, #f87171, #ef4444);
 }
 
 .btn:disabled {
