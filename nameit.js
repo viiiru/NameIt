@@ -841,6 +841,10 @@ function preloadImages() {
 
 function init() {
   resetGameState();
+  
+  // Check and request microphone permission on page load
+  checkMicrophonePermission();
+  
   initSpeechRecognition();
   renderLibraryList();
   wireEvents();
@@ -877,6 +881,23 @@ function init() {
   
   // Preload images in background (non-blocking) for faster gameplay
   // (already called earlier in init, but keeping here for clarity)
+}
+
+// Check microphone permission when page loads
+async function checkMicrophonePermission() {
+  try {
+    // Check if we can access the microphone
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    // Permission granted - stop the stream (we just needed permission)
+    stream.getTracks().forEach(track => track.stop());
+    console.log("Microphone permission granted");
+  } catch (error) {
+    console.error("Microphone permission error:", error);
+    if (elements.speechStatus) {
+      elements.speechStatus.textContent = "Microphone permission needed. Please allow access.";
+      elements.speechStatus.classList.add("status-error");
+    }
+  }
 }
 
 window.addEventListener("DOMContentLoaded", init);

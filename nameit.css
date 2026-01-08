@@ -27,6 +27,33 @@ body {
 
 .header {
   text-align: center;
+  position: relative;
+}
+
+.back-button {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #fef3c7;
+  text-decoration: none;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(254, 249, 195, 0.4);
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.back-button:hover {
+  background: rgba(15, 23, 42, 0.8);
+  border-color: rgba(254, 249, 195, 0.7);
+  transform: translateY(-50%) translateX(-3px);
+  color: #fef9c3;
 }
 
 .title {
