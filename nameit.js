@@ -247,21 +247,29 @@ function resetGameState() {
 function startRound() {
   resetGameState();
   acceptingAnswers = true;
-  if (elements.startButton) {
-    elements.startButton.style.display = "none"; // Hide "Play Again" button
+  
+  // Hide start controls group, show game controls group
+  const startControlsGroup = document.querySelector('.start-controls-group');
+  const gameControlsGroup = document.querySelector('.game-controls-group');
+  const soundButtonFixed = document.getElementById('sound-toggle-button-fixed');
+  const soundButtonInline = document.getElementById('sound-toggle-button');
+  
+  if (startControlsGroup) {
+    startControlsGroup.style.display = "none";
   }
-  // Show stop button, hide start button text
-  if (elements.stopButton) {
-    elements.stopButton.style.display = "inline-flex";
+  if (gameControlsGroup) {
+    gameControlsGroup.style.display = "flex";
   }
+  if (soundButtonFixed) {
+    soundButtonFixed.style.display = "inline-flex";
+  }
+  if (soundButtonInline) {
+    soundButtonInline.style.display = "none";
+  }
+  
   // Disable duration selector during play
   if (elements.durationSelect) {
     elements.durationSelect.disabled = true;
-  }
-  
-  // Show skip button
-  if (elements.skipButton) {
-    elements.skipButton.style.display = "inline-flex";
   }
   
   // Auto-start recording when round starts
