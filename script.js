@@ -105,6 +105,19 @@ function initSpeechRecognition() {
     if (acceptingAnswers) {
       elements.speechStatus.textContent = "Speech: ready";
       elements.speechStatus.classList.add("status-ok");
+      // Automatically restart recognition if game is still active for faster next word
+      if (currentItem) {
+        // Small delay to ensure recognition is fully stopped before restarting
+        setTimeout(() => {
+          if (acceptingAnswers && !isListening && currentItem) {
+            try {
+              recognition.start();
+            } catch {
+              // Ignore if can't start (user might be pressing button)
+            }
+          }
+        }, 100);
+      }
     } else {
       elements.speechStatus.textContent = "Speech: idle";
       elements.speechStatus.classList.remove("status-ok");
@@ -132,6 +145,12 @@ function initSpeechRecognition() {
       // Keep original transcript for display, normalize for comparison
       const originalTranscript = transcript.trim();
       const normalizedTranscript = originalTranscript.toLowerCase();
+      
+      // Show interim results immediately in "Last" field for real-time feedback
+      if (!result.isFinal) {
+        elements.lastResult.textContent = `"${originalTranscript}"...`;
+        elements.lastResult.classList.remove("status-ok", "status-error");
+      }
       
       // Check if this matches the answer - process immediately for speed
       const normRecognized = normalizeAnswer(normalizedTranscript);
@@ -612,6 +631,17 @@ function handleCorrectAnswer(transcript) {
 
   // Immediately move to next image (no delay)
   loadNextImage();
+  
+  // Restart recognition quickly for the next word (after a brief delay to let image load)
+  setTimeout(() => {
+    if (acceptingAnswers && currentItem && !isListening) {
+      try {
+        recognition.start();
+      } catch {
+        // Ignore if can't start
+      }
+    }
+  }, 200);
 }
 
 function handleWrongAnswer(transcript) {
@@ -624,6 +654,17 @@ function handleWrongAnswer(transcript) {
   elements.imageFrame.classList.add("wrong");
 
   playBeep("bad");
+  
+  // Restart recognition quickly for the next attempt
+  setTimeout(() => {
+    if (acceptingAnswers && currentItem && !isListening) {
+      try {
+        recognition.start();
+      } catch {
+        // Ignore if can't start
+      }
+    }
+  }, 300);
 }
 
 function beginListening() {
