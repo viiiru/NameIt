@@ -13,7 +13,7 @@ const elements = {
   loadingIndicator: document.getElementById("loading-indicator"),
   startButton: document.getElementById("start-button"),
   stopButton: document.getElementById("stop-button"),
-  speakButton: document.getElementById("speak-button"),
+  skipButton: document.getElementById("skip-button"),
   speechStatus: document.getElementById("speech-status"),
   gameMessage: document.getElementById("game-message"),
   libraryList: document.getElementById("library-list"),
@@ -46,7 +46,6 @@ function initSpeechRecognition() {
     elements.speechStatus.textContent =
       "Speech: not available in this browser. Try Chrome or Edge.";
     elements.speechStatus.classList.add("status-error");
-    elements.speakButton.disabled = true;
     return;
   }
 
@@ -201,11 +200,9 @@ function initSpeechRecognition() {
     }
   };
 
-  // Only set status to ready, don't enable button until user starts a round
-  // This prevents premature permission requests
+  // Only set status to ready
   elements.speechStatus.textContent = "Speech: ready (click Start to play)";
   elements.speechStatus.classList.add("status-ok");
-  elements.speakButton.disabled = false;
 }
 
 function resetGameState() {
@@ -262,8 +259,15 @@ function startRound() {
   if (elements.durationSelect) {
     elements.durationSelect.disabled = true;
   }
-  if (elements.speakButton) {
-    elements.speakButton.disabled = !recognition;
+  
+  // Show skip button
+  if (elements.skipButton) {
+    elements.skipButton.style.display = "inline-flex";
+  }
+  
+  // Auto-start recording when round starts
+  if (recognition && acceptingAnswers) {
+    beginListening();
   }
 
   // Hide the start image placeholder and end image immediately when game starts
@@ -319,7 +323,12 @@ function stopGame() {
   if (elements.durationSelect) {
     elements.durationSelect.disabled = false;
   }
-  elements.speakButton.disabled = true;
+  
+  // Hide skip button
+  if (elements.skipButton) {
+    elements.skipButton.style.display = "none";
+  }
+  
   elements.gameMessage.textContent = `Game stopped. Your score: ${currentScore}`;
   
   // Hide current game image completely before showing end picture
@@ -373,7 +382,12 @@ function endRound() {
   if (elements.durationSelect) {
     elements.durationSelect.disabled = false;
   }
-  elements.speakButton.disabled = true;
+  
+  // Hide skip button
+  if (elements.skipButton) {
+    elements.skipButton.style.display = "none";
+  }
+  
   elements.gameMessage.textContent = `Time! Your score: ${currentScore}`;
   
   // Hide current game image completely before showing end picture
@@ -628,9 +642,13 @@ function handleCorrectAnswer(transcript) {
   // Wait a moment to show the green word, then move to next image
   setTimeout(() => {
     loadNextImage();
+    // Restart recording after loading next image
+    if (recognition && acceptingAnswers) {
+      setTimeout(() => {
+        beginListening();
+      }, 100);
+    }
   }, 800); // 800ms delay so user can see the green word
-  
-  // Don't auto-restart - user will press the button again for next word
 }
 
 function handleWrongAnswer(transcript) {
@@ -644,7 +662,12 @@ function handleWrongAnswer(transcript) {
 
   playBeep("bad");
   
-  // Don't auto-restart - user will press the button again for next attempt
+  // Restart recording for next attempt
+  if (recognition && acceptingAnswers && !isListening) {
+    setTimeout(() => {
+      beginListening();
+    }, 300);
+  }
 }
 
 function beginListening() {
@@ -781,29 +804,12 @@ function wireEvents() {
     });
   }
 
-  // Support both click (tap) and press/hold semantics:
-  // - mouse/touch down starts listening
-  // - mouse/touch up stops listening
-  elements.speakButton.addEventListener("mousedown", beginListening);
-  elements.speakButton.addEventListener("mouseup", stopListening);
-  elements.speakButton.addEventListener("mouseleave", stopListening);
-
-  elements.speakButton.addEventListener("touchstart", (e) => {
-    e.preventDefault();
-    beginListening();
-  });
-  elements.speakButton.addEventListener("touchend", (e) => {
-    e.preventDefault();
-    stopListening();
-  });
-
-  // Fallback: simple click triggers a single listen if press/hold
-  // isn't used (e.g., screen readers)
-  elements.speakButton.addEventListener("click", () => {
-    if (!isListening) {
-      beginListening();
-    }
-  });
+  // Skip button to skip current word without penalty
+  if (elements.skipButton) {
+    elements.skipButton.addEventListener("click", () => {
+      skipWord();
+    });
+  }
 
   if (elements.soundToggleButton) {
     elements.soundToggleButton.addEventListener("click", () => {

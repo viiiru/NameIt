@@ -9,6 +9,7 @@ let correctSound = null;
 let backgroundMusic = null;
 let endMusic = null;
 let isMuted = false;
+let selectedOperations = []; // Track selected operations for click-based gameplay
 
 const elements = {
   timeRemaining: document.getElementById("time-remaining"),
@@ -18,7 +19,10 @@ const elements = {
   lastResult: document.getElementById("last-result"),
   startButton: document.getElementById("start-button"),
   stopButton: document.getElementById("stop-button"),
-  answerInput: document.getElementById("answer-input"),
+  clearButton: document.getElementById("clear-button"),
+  submitButton: document.getElementById("submit-button"),
+  selectedOperations: document.getElementById("selected-operations"),
+  calculatedResult: document.getElementById("calculated-result"),
   gameMessage: document.getElementById("game-message"),
   soundToggleButton: document.getElementById("sound-toggle-button"),
 };
@@ -134,12 +138,15 @@ function displayPyramid(puzzle) {
   let itemsPerRow = 1;
   let itemCount = 0;
   
-  // Add start number
+  // Add start number (clickable)
   const startRow = document.createElement('div');
   startRow.className = 'pyramid-row';
   const startCell = document.createElement('div');
-  startCell.className = 'pyramid-cell';
+  startCell.className = 'pyramid-cell pyramid-cell-clickable';
   startCell.textContent = puzzle.startNumber;
+  startCell.dataset.type = 'start';
+  startCell.dataset.value = puzzle.startNumber;
+  startCell.addEventListener('click', () => handleCellClick(startCell, 'start', puzzle.startNumber));
   startRow.appendChild(startCell);
   elements.pyramidDisplay.appendChild(startRow);
   
@@ -151,9 +158,14 @@ function displayPyramid(puzzle) {
     }
     
     const cell = document.createElement('div');
-    cell.className = 'pyramid-cell';
+    cell.className = 'pyramid-cell pyramid-cell-clickable';
     const { op, num } = puzzle.operations[i];
     cell.textContent = `${op}${num}`;
+    cell.dataset.type = 'operation';
+    cell.dataset.op = op;
+    cell.dataset.num = num;
+    cell.dataset.index = i;
+    cell.addEventListener('click', () => handleCellClick(cell, 'operation', { op, num }));
     currentRow.appendChild(cell);
     itemCount++;
     
@@ -180,20 +192,24 @@ function displayPyramid(puzzle) {
 function resetGameState() {
   currentScore = 0;
   timeRemaining = 60;
+  selectedOperations = [];
   if (elements.score) elements.score.textContent = String(currentScore);
   if (elements.timeRemaining) elements.timeRemaining.textContent = String(timeRemaining);
   if (elements.lastResult) elements.lastResult.textContent = "–";
   if (elements.lastResult) elements.lastResult.classList.remove("status-ok", "status-error");
   if (elements.gameMessage) elements.gameMessage.textContent = "";
+  if (elements.selectedOperations) elements.selectedOperations.textContent = "–";
+  if (elements.calculatedResult) elements.calculatedResult.textContent = "–";
   acceptingAnswers = false;
-  
-  if (elements.answerInput) {
-    elements.answerInput.value = "";
-    elements.answerInput.disabled = true;
-  }
   
   if (elements.stopButton) {
     elements.stopButton.style.display = "none";
+  }
+  if (elements.clearButton) {
+    elements.clearButton.style.display = "none";
+  }
+  if (elements.submitButton) {
+    elements.submitButton.style.display = "none";
   }
   
   if (roundTimerId) {
@@ -216,9 +232,11 @@ function startRound() {
   if (elements.stopButton) {
     elements.stopButton.style.display = "inline-flex";
   }
-  if (elements.answerInput) {
-    elements.answerInput.disabled = false;
-    elements.answerInput.focus();
+  if (elements.clearButton) {
+    elements.clearButton.style.display = "inline-flex";
+  }
+  if (elements.submitButton) {
+    elements.submitButton.style.display = "inline-flex";
   }
   
   // Generate and display new puzzle
@@ -291,8 +309,11 @@ function endRound() {
   if (elements.stopButton) {
     elements.stopButton.style.display = "none";
   }
-  if (elements.answerInput) {
-    elements.answerInput.disabled = true;
+  if (elements.clearButton) {
+    elements.clearButton.style.display = "none";
+  }
+  if (elements.submitButton) {
+    elements.submitButton.style.display = "none";
   }
   elements.gameMessage.textContent = `Time! Your score: ${currentScore}`;
   
@@ -309,30 +330,121 @@ function endRound() {
   }
 }
 
-function checkAnswer(inputText) {
-  if (!currentPuzzle || !inputText.trim()) return;
+function handleCellClick(cell, type, value) {
+  if (!acceptingAnswers || !currentPuzzle) return;
   
-  const result = calculateResult(inputText);
+  // Toggle selection
+  if (cell.classList.contains('selected')) {
+    // Deselect
+    cell.classList.remove('selected');
+    if (type === 'start') {
+      selectedOperations = selectedOperations.filter(op => op.type !== 'start');
+    } else {
+      const index = selectedOperations.findIndex(op => op.type === 'operation' && op.index === cell.dataset.index);
+      if (index !== -1) {
+        selectedOperations.splice(index, 1);
+      }
+    }
+  } else {
+    // Select
+    cell.classList.add('selected');
+    if (type === 'start') {
+      // Remove any existing start number
+      selectedOperations = selectedOperations.filter(op => op.type !== 'start');
+      selectedOperations.unshift({ type: 'start', value: value });
+    } else {
+      selectedOperations.push({ type: 'operation', op: value.op, num: value.num, index: parseInt(cell.dataset.index) });
+    }
+  }
+  
+  updateSelectedDisplay();
+}
+
+function updateSelectedDisplay() {
+  if (!elements.selectedOperations || !elements.calculatedResult) return;
+  
+  if (selectedOperations.length === 0) {
+    elements.selectedOperations.textContent = "–";
+    elements.calculatedResult.textContent = "–";
+    return;
+  }
+  
+  // Build display string
+  const displayParts = [];
+  let result = null;
+  
+  selectedOperations.forEach((op, index) => {
+    if (op.type === 'start') {
+      displayParts.push(String(op.value));
+      result = op.value;
+    } else {
+      displayParts.push(`${op.op}${op.num}`);
+      if (result !== null) {
+        if (op.op === '+') {
+          result += op.num;
+        } else if (op.op === '-') {
+          result -= op.num;
+        } else if (op.op === 'x') {
+          result *= op.num;
+        } else if (op.op === '/') {
+          result = Math.round(result / op.num);
+        }
+      }
+    }
+  });
+  
+  elements.selectedOperations.textContent = displayParts.join(', ');
+  elements.calculatedResult.textContent = result !== null ? String(result) : "–";
+}
+
+function checkAnswer() {
+  if (!currentPuzzle || selectedOperations.length === 0) return;
+  
+  // Calculate result from selected operations
+  let result = null;
+  
+  selectedOperations.forEach((op) => {
+    if (op.type === 'start') {
+      result = op.value;
+    } else if (result !== null) {
+      if (op.op === '+') {
+        result += op.num;
+      } else if (op.op === '-') {
+        result -= op.num;
+      } else if (op.op === 'x') {
+        result *= op.num;
+      } else if (op.op === '/') {
+        result = Math.round(result / op.num);
+      }
+    }
+  });
   
   if (result === null) {
-    // Invalid format
-    elements.lastResult.textContent = `"${inputText}"`;
-    elements.lastResult.classList.remove("status-ok");
-    elements.lastResult.classList.add("status-error");
-    elements.gameMessage.textContent = "Invalid format. Use: startNumber, +5, -3, x2, /4";
+    elements.gameMessage.textContent = "Please select a starting number first.";
     playBeep("bad");
-    if (elements.answerInput) {
-      elements.answerInput.value = "";
-      elements.answerInput.focus();
-    }
     return;
   }
   
   if (result === currentPuzzle.target) {
-    handleCorrectAnswer(inputText.trim());
+    const answerText = selectedOperations.map(op => 
+      op.type === 'start' ? String(op.value) : `${op.op}${op.num}`
+    ).join(', ');
+    handleCorrectAnswer(answerText);
   } else {
-    handleWrongAnswer(inputText.trim(), result);
+    const answerText = selectedOperations.map(op => 
+      op.type === 'start' ? String(op.value) : `${op.op}${op.num}`
+    ).join(', ');
+    handleWrongAnswer(answerText, result);
   }
+}
+
+function clearSelection() {
+  selectedOperations = [];
+  updateSelectedDisplay();
+  
+  // Remove selected class from all cells
+  const cells = document.querySelectorAll('.pyramid-cell-clickable');
+  cells.forEach(cell => cell.classList.remove('selected'));
 }
 
 function playBeep(type) {
@@ -431,10 +543,7 @@ function handleCorrectAnswer(answer) {
       if (elements.targetValue) {
         elements.targetValue.textContent = String(currentPuzzle.target);
       }
-      if (elements.answerInput) {
-        elements.answerInput.value = "";
-        elements.answerInput.focus();
-      }
+      clearSelection();
       elements.lastResult.textContent = "–";
       elements.lastResult.classList.remove("status-ok", "status-error");
     }
@@ -452,10 +561,8 @@ function handleWrongAnswer(answer, calculatedResult) {
   
   playBeep("bad");
   
-  if (elements.answerInput) {
-    elements.answerInput.value = "";
-    elements.answerInput.focus();
-  }
+  // Clear selection for next attempt
+  clearSelection();
 }
 
 function wireEvents() {
@@ -473,26 +580,16 @@ function wireEvents() {
       stopGame();
     });
   }
-  
-  if (elements.answerInput) {
-    elements.answerInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" && acceptingAnswers && currentPuzzle) {
-        e.preventDefault();
-        const inputValue = elements.answerInput.value.trim();
-        if (inputValue) {
-          checkAnswer(inputValue);
-        }
-      }
+
+  if (elements.clearButton) {
+    elements.clearButton.addEventListener("click", () => {
+      clearSelection();
     });
-    
-    elements.answerInput.addEventListener("input", (e) => {
-      if (acceptingAnswers && e.target.value.trim()) {
-        elements.lastResult.textContent = `"${e.target.value}"`;
-        elements.lastResult.classList.remove("status-ok", "status-error");
-      } else if (!e.target.value.trim()) {
-        elements.lastResult.textContent = "–";
-        elements.lastResult.classList.remove("status-ok", "status-error");
-      }
+  }
+
+  if (elements.submitButton) {
+    elements.submitButton.addEventListener("click", () => {
+      checkAnswer();
     });
   }
   
