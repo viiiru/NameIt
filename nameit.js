@@ -141,13 +141,7 @@ function initSpeechRecognition() {
       const originalTranscript = transcript.trim();
       const normalizedTranscript = originalTranscript.toLowerCase();
       
-      // Show interim results immediately in "Last" field for real-time feedback
-      if (!result.isFinal) {
-        elements.lastResult.textContent = `"${originalTranscript}"...`;
-        elements.lastResult.classList.remove("status-ok", "status-error");
-      }
-      
-      // Check if this matches the answer - process immediately for speed
+      // Check if this matches the answer - process immediately for speed (even interim results)
       const normRecognized = normalizeAnswer(normalizedTranscript);
       const accepted = currentItem.answers.some(
         (ans) => normalizeAnswer(ans) === normRecognized
@@ -173,6 +167,12 @@ function initSpeechRecognition() {
         // Process the answer immediately (use original transcript for display)
         handleCorrectAnswer(originalTranscript);
         return; // Exit early - we found a match
+      }
+      
+      // Show interim results in "Last" field for real-time feedback (only if no match yet)
+      if (!result.isFinal) {
+        elements.lastResult.textContent = `"${originalTranscript}"...`;
+        elements.lastResult.classList.remove("status-ok", "status-error");
       }
       
       // If this is a final result (not interim), process it even if no match yet
@@ -312,15 +312,28 @@ function stopGame() {
     recognition.stop();
   }
 
-  // Show start button again
+  // Show start controls group, hide game controls group
+  const startControlsGroup = document.querySelector('.start-controls-group');
+  const gameControlsGroup = document.querySelector('.game-controls-group');
+  const soundButtonFixed = document.getElementById('sound-toggle-button-fixed');
+  const soundButtonInline = document.getElementById('sound-toggle-button');
+  
+  if (startControlsGroup) {
+    startControlsGroup.style.display = "flex";
+  }
+  if (gameControlsGroup) {
+    gameControlsGroup.style.display = "none";
+  }
+  if (soundButtonFixed) {
+    soundButtonFixed.style.display = "none";
+  }
+  if (soundButtonInline) {
+    soundButtonInline.style.display = "inline-flex";
+  }
+  
   if (elements.startButton) {
-    elements.startButton.style.display = "inline-flex";
     elements.startButton.disabled = false;
     elements.startButton.textContent = "Start Round";
-  }
-  // Hide stop button
-  if (elements.stopButton) {
-    elements.stopButton.style.display = "none";
   }
   // Re-enable duration selector
   if (elements.durationSelect) {
@@ -375,15 +388,28 @@ function endRound() {
     recognition.stop();
   }
 
-  // Show start button again
+  // Show start controls group, hide game controls group
+  const startControlsGroup = document.querySelector('.start-controls-group');
+  const gameControlsGroup = document.querySelector('.game-controls-group');
+  const soundButtonFixed = document.getElementById('sound-toggle-button-fixed');
+  const soundButtonInline = document.getElementById('sound-toggle-button');
+  
+  if (startControlsGroup) {
+    startControlsGroup.style.display = "flex";
+  }
+  if (gameControlsGroup) {
+    gameControlsGroup.style.display = "none";
+  }
+  if (soundButtonFixed) {
+    soundButtonFixed.style.display = "none";
+  }
+  if (soundButtonInline) {
+    soundButtonInline.style.display = "inline-flex";
+  }
+  
   if (elements.startButton) {
-    elements.startButton.style.display = "inline-flex";
     elements.startButton.disabled = false;
     elements.startButton.textContent = "Play Again";
-  }
-  // Hide stop button
-  if (elements.stopButton) {
-    elements.stopButton.style.display = "none";
   }
   // Re-enable duration selector after round ends
   if (elements.durationSelect) {
@@ -856,9 +882,27 @@ function skipWord() {
   // Load next image immediately
   loadNextImage();
 
-  if (elements.soundToggleButton) {
-    elements.soundToggleButton.addEventListener("click", () => {
+  // Add sound button listeners for both inline and fixed buttons
+  const soundButtonInline = document.getElementById("sound-toggle-button");
+  const soundButtonFixed = document.getElementById("sound-toggle-button-fixed");
+  
+  if (soundButtonInline) {
+    soundButtonInline.addEventListener("click", () => {
       toggleMute();
+      // Update both buttons
+      if (soundButtonFixed) {
+        soundButtonFixed.textContent = soundButtonInline.textContent;
+      }
+    });
+  }
+  
+  if (soundButtonFixed) {
+    soundButtonFixed.addEventListener("click", () => {
+      toggleMute();
+      // Update both buttons
+      if (soundButtonInline) {
+        soundButtonInline.textContent = soundButtonFixed.textContent;
+      }
     });
   }
 

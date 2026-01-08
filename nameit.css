@@ -313,6 +313,7 @@ body {
 
 .controls {
   display: flex;
+  flex-direction: column;
   gap: 8px;
   justify-content: center;
   flex-wrap: wrap;
@@ -320,10 +321,18 @@ body {
   align-items: center;
 }
 
+.start-controls-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+}
+
 .game-controls-group {
   display: flex;
   gap: 8px;
   align-items: center;
+  justify-content: center;
 }
 
 .btn {
@@ -351,6 +360,17 @@ body {
   box-shadow: 0 16px 40px rgba(236, 72, 153, 0.9);
 }
 
+.btn.start-button {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: #0b1020;
+  box-shadow: 0 12px 30px rgba(34, 197, 94, 0.6);
+}
+
+.btn.start-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 40px rgba(22, 163, 74, 0.9);
+}
+
 .btn.secondary {
   background: linear-gradient(135deg, #22c55e, #0ea5e9);
   color: #022c22;
@@ -362,6 +382,19 @@ body {
   transform: translateY(-1px);
   box-shadow: 0 12px 32px rgba(14, 165, 233, 0.9);
   background: linear-gradient(135deg, #4ade80, #38bdf8);
+}
+
+.btn.sound-button-inline {
+  background: linear-gradient(135deg, #0ea5e9, #0284c7);
+  color: #0b1020;
+  border: 1px solid rgba(14, 165, 233, 0.8);
+  box-shadow: 0 8px 25px rgba(14, 165, 233, 0.6);
+}
+
+.btn.sound-button-inline:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 32px rgba(2, 132, 199, 0.9);
+  background: linear-gradient(135deg, #38bdf8, #0ea5e9);
 }
 
 .btn.skip {
@@ -379,10 +412,19 @@ body {
 
 .sound-button {
   position: fixed;
-  bottom: 20px;
+  bottom: 70px;
   right: 20px;
   z-index: 100;
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+  background: linear-gradient(135deg, #0ea5e9, #0284c7);
+  color: #0b1020;
+  border: 1px solid rgba(14, 165, 233, 0.8);
+}
+
+.sound-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 32px rgba(2, 132, 199, 0.9);
+  background: linear-gradient(135deg, #38bdf8, #0ea5e9);
 }
 
 .btn:disabled {

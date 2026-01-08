@@ -3,18 +3,18 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>NameIt - Voice Vocabulary Game</title>
-    <meta name="description" content="NameIt - A fast-paced voice-controlled vocabulary game. Say what you see and beat the clock! Perfect for learning and practicing vocabulary." />
+    <title>Name It - Voice Vocabulary Game</title>
+    <meta name="description" content="Name It - A fast-paced voice-controlled vocabulary game. Say what you see and beat the clock! Perfect for learning and practicing vocabulary." />
     <meta name="keywords" content="vocabulary game, voice game, speech recognition, educational game, learning game, word game" />
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="NameIt - Voice Vocabulary Game" />
+    <meta property="og:title" content="Name It - Voice Vocabulary Game" />
     <meta property="og:description" content="Say what you see. Beat the clock. A fast-paced voice-controlled vocabulary game!" />
     
     <!-- Twitter -->
     <meta name="twitter:card" content="summary" />
-    <meta name="twitter:title" content="NameIt - Voice Vocabulary Game" />
+    <meta name="twitter:title" content="Name It - Voice Vocabulary Game" />
     <meta name="twitter:description" content="Say what you see. Beat the clock. A fast-paced voice-controlled vocabulary game!" />
     
     <link rel="stylesheet" href="nameit.css" />
@@ -22,7 +22,7 @@
   <body>
     <div class="app">
       <header class="header">
-        <h1 class="title">NameIt</h1>
+        <h1 class="title">Name It</h1>
         <p class="subtitle">Say what you see. Beat the clock.</p>
       </header>
 
@@ -84,13 +84,16 @@
         </section>
 
         <section class="controls">
-          <button id="start-button" class="btn primary">Start Round</button>
-          <div class="game-controls-group">
-            <button id="stop-button" class="btn secondary" style="display: none;">Stop Game</button>
-            <button id="skip-button" class="btn skip" style="display: none;">Skip</button>
+          <div class="start-controls-group">
+            <button id="start-button" class="btn start-button">Start Round</button>
+            <button id="sound-toggle-button" class="btn sound-button-inline">Sound: On</button>
+          </div>
+          <div class="game-controls-group" style="display: none;">
+            <button id="stop-button" class="btn secondary">Stop Game</button>
+            <button id="skip-button" class="btn skip">Skip</button>
           </div>
         </section>
-        <button id="sound-toggle-button" class="btn secondary sound-button">Sound: On</button>
+        <button id="sound-toggle-button-fixed" class="btn secondary sound-button" style="display: none;">Sound: On</button>
 
         <section class="status">
           <div id="speech-status" class="status-line">Speech: idle</div>
