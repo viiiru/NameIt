@@ -25,9 +25,9 @@ const elements = {
 
 // Generate a random pyramid puzzle
 function generatePuzzle() {
-  // Generate operations: +, -, x, /
+  // Generate 8-12 operations to show in pyramid
   const operations = ['+', '-', 'x', '/'];
-  const numOperations = 8 + Math.floor(Math.random() * 4); // 8-11 operations
+  const numOperations = 8 + Math.floor(Math.random() * 5); // 8-12 operations
   
   const puzzleOps = [];
   for (let i = 0; i < numOperations; i++) {
@@ -47,24 +47,25 @@ function generatePuzzle() {
     puzzleOps.push({ op, num });
   }
   
-  // Calculate a valid target by starting with a random number and applying operations
+  // Generate a target that's reachable using some of these operations
+  // Start with a random number
   let startNum = 1 + Math.floor(Math.random() * 20);
-  let result = startNum;
-  const solution = [startNum];
   
-  puzzleOps.forEach(({ op, num }) => {
+  // Use a random subset of operations to calculate target
+  const numOpsToUse = 3 + Math.floor(Math.random() * 4); // Use 3-6 operations
+  const shuffledOps = [...puzzleOps].sort(() => Math.random() - 0.5);
+  const opsToUse = shuffledOps.slice(0, Math.min(numOpsToUse, puzzleOps.length));
+  
+  let result = startNum;
+  opsToUse.forEach(({ op, num }) => {
     if (op === '+') {
       result += num;
-      solution.push(`+${num}`);
     } else if (op === '-') {
       result -= num;
-      solution.push(`-${num}`);
     } else if (op === 'x') {
       result *= num;
-      solution.push(`x${num}`);
     } else { // '/'
       result = Math.round(result / num);
-      solution.push(`/${num}`);
     }
   });
   
@@ -74,10 +75,10 @@ function generatePuzzle() {
   }
   
   return {
-    operations: puzzleOps,
+    operations: puzzleOps, // All operations available
     target: result,
     startNumber: startNum,
-    validSolutions: [solution.join(', ')] // Store the solution
+    // Player can use any combination of operations to reach target
   };
 }
 
