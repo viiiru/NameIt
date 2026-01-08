@@ -498,6 +498,13 @@ function loadNextImage() {
       elements.imagePlaceholder.classList.add("hidden");
       elements.currentImage.classList.remove("hidden");
       elements.currentImage.classList.add("visible");
+      
+      // Restart recording after image is shown
+      if (recognition && acceptingAnswers && !isListening) {
+        setTimeout(() => {
+          beginListening();
+        }, 200);
+      }
     };
     
     // Use load event for when image finishes loading
