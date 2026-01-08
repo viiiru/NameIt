@@ -82,14 +82,22 @@ function initSpeechRecognition() {
 
   recognition.onerror = (event) => {
     isListening = false;
+    console.error("Recognition error:", event.error);
     
     // Handle permission denied errors more gracefully
     if (event.error === "not-allowed" || event.error === "service-not-allowed") {
       elements.speechStatus.textContent = "Microphone permission needed. Please allow access.";
       elements.speechStatus.classList.remove("status-ok");
       elements.speechStatus.classList.add("status-error");
+      // Try to request permission again
+      checkMicrophonePermission();
+    } else if (event.error === "no-speech") {
+      // No speech detected - this is normal, just reset status
+      elements.speechStatus.textContent = "Speech: ready";
+      elements.speechStatus.classList.add("status-ok");
+      elements.speechStatus.classList.remove("status-error");
     } else {
-      elements.speechStatus.textContent = `Speech error: ${event.error}`;
+      elements.speechStatus.textContent = `Speech error: ${event.error}. Try again.`;
       elements.speechStatus.classList.remove("status-ok");
       elements.speechStatus.classList.add("status-error");
     }
