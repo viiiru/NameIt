@@ -617,8 +617,10 @@ function handleCorrectAnswer(transcript) {
     }
   }
 
-  // Immediately move to next image (no delay)
-  loadNextImage();
+  // Wait a moment to show the green word, then move to next image
+  setTimeout(() => {
+    loadNextImage();
+  }, 800); // 800ms delay so user can see the green word
   
   // Don't auto-restart - user will press the button again for next word
 }
