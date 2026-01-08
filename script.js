@@ -64,7 +64,7 @@ function initSpeechRecognition() {
     elements.speechStatus.classList.remove("status-error");
     elements.speechStatus.classList.add("status-ok");
     
-    // Set a timeout to force-stop recognition if it takes too long (2 seconds max)
+    // Set a timeout to force-stop recognition if it takes too long (5 seconds max)
     // This prevents the game from hanging if recognition doesn't respond
     if (recognitionTimeoutId) {
       clearTimeout(recognitionTimeoutId);
@@ -77,7 +77,7 @@ function initSpeechRecognition() {
           // Ignore errors
         }
       }
-    }, 2000); // Force stop after 2 seconds
+    }, 5000); // Force stop after 5 seconds (longer to allow user to speak)
   };
 
   recognition.onerror = (event) => {
@@ -105,19 +105,7 @@ function initSpeechRecognition() {
     if (acceptingAnswers) {
       elements.speechStatus.textContent = "Speech: ready";
       elements.speechStatus.classList.add("status-ok");
-      // Automatically restart recognition if game is still active for faster next word
-      if (currentItem) {
-        // Small delay to ensure recognition is fully stopped before restarting
-        setTimeout(() => {
-          if (acceptingAnswers && !isListening && currentItem) {
-            try {
-              recognition.start();
-            } catch {
-              // Ignore if can't start (user might be pressing button)
-            }
-          }
-        }, 100);
-      }
+      // Don't auto-restart - let the user control it with the button
     } else {
       elements.speechStatus.textContent = "Speech: idle";
       elements.speechStatus.classList.remove("status-ok");
@@ -632,16 +620,7 @@ function handleCorrectAnswer(transcript) {
   // Immediately move to next image (no delay)
   loadNextImage();
   
-  // Restart recognition quickly for the next word (after a brief delay to let image load)
-  setTimeout(() => {
-    if (acceptingAnswers && currentItem && !isListening) {
-      try {
-        recognition.start();
-      } catch {
-        // Ignore if can't start
-      }
-    }
-  }, 200);
+  // Don't auto-restart - user will press the button again for next word
 }
 
 function handleWrongAnswer(transcript) {
@@ -655,16 +634,7 @@ function handleWrongAnswer(transcript) {
 
   playBeep("bad");
   
-  // Restart recognition quickly for the next attempt
-  setTimeout(() => {
-    if (acceptingAnswers && currentItem && !isListening) {
-      try {
-        recognition.start();
-      } catch {
-        // Ignore if can't start
-      }
-    }
-  }, 300);
+  // Don't auto-restart - user will press the button again for next attempt
 }
 
 function beginListening() {
@@ -679,14 +649,33 @@ function beginListening() {
     return;
   }
 
+  // Clear any pending timeout when user manually starts
+  if (recognitionTimeoutId) {
+    clearTimeout(recognitionTimeoutId);
+    recognitionTimeoutId = null;
+  }
+
   try {
     console.log("Starting speech recognition...");
     // Start recognition immediately - browser handles cleanup internally
     recognition.start();
   } catch (e) {
     console.log("Error starting recognition:", e);
-    // If already started or other error, ignore and continue
-    // The recognition.onend handler will reset isListening
+    // If already started, try stopping first then starting again
+    if (e.message && e.message.includes("already started")) {
+      try {
+        recognition.stop();
+        setTimeout(() => {
+          try {
+            recognition.start();
+          } catch {
+            // Ignore second error
+          }
+        }, 100);
+      } catch {
+        // Ignore stop error
+      }
+    }
   }
 }
 
