@@ -55,21 +55,40 @@ document.addEventListener('DOMContentLoaded', () => {
     const nameSavedIndicator = document.getElementById('name-saved-indicator');
     
     function savePlayerName() {
-      if (!nameInput) return false;
+      if (!nameInput) {
+        console.warn('Name input not found');
+        return false;
+      }
       const name = nameInput.value.trim();
       if (name) {
         try {
           localStorage.setItem(PLAYER_NAME_KEY, name);
+          console.log('Name saved:', name);
           // Show saved indicator
           if (nameSavedIndicator) {
+            nameSavedIndicator.textContent = 'Name saved!';
             nameSavedIndicator.style.display = 'inline';
             setTimeout(() => {
               nameSavedIndicator.style.display = 'none';
             }, 2000);
+          } else {
+            console.warn('Name saved indicator not found');
           }
           return true;
         } catch (error) {
           console.error('Failed to save player name:', error);
+          alert('Failed to save name: ' + error.message);
+        }
+      } else {
+        console.warn('Name is empty');
+        if (nameSavedIndicator) {
+          nameSavedIndicator.textContent = 'Please enter a name';
+          nameSavedIndicator.style.display = 'inline';
+          nameSavedIndicator.style.color = '#f97316';
+          setTimeout(() => {
+            nameSavedIndicator.style.display = 'none';
+            nameSavedIndicator.style.color = '#22c55e';
+          }, 2000);
         }
       }
       return false;
@@ -133,27 +152,41 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize game cards and buttons
     const gameCards = document.querySelectorAll('.game-card');
     
-    gameCards.forEach(card => {
+    if (gameCards.length === 0) {
+      console.error('No game cards found!');
+    }
+    
+    gameCards.forEach((card, index) => {
       const playButton = card.querySelector('.play-button');
       const gameName = card.dataset.game;
       
-      if (!playButton || !gameName) {
-        console.warn('Game card missing button or game name:', card);
+      if (!playButton) {
+        console.error(`Game card ${index} missing play button:`, card);
         return;
       }
       
-      // Make entire card clickable
-      card.addEventListener('click', (e) => {
-        // Don't trigger if clicking the button directly (it has its own handler)
-        if (e.target !== playButton && !e.target.closest('.play-button')) {
-          handleGameClick(gameName);
-        }
-      });
+      if (!gameName) {
+        console.error(`Game card ${index} missing data-game attribute:`, card);
+        return;
+      }
       
-      // Button click handler
+      console.log(`Setting up game card: ${gameName}`);
+      
+      // Button click handler - attach directly to button
       playButton.addEventListener('click', (e) => {
         e.preventDefault();
-        e.stopPropagation(); // Prevent card click
+        e.stopPropagation();
+        console.log(`Play button clicked for: ${gameName}`);
+        handleGameClick(gameName);
+      });
+      
+      // Make entire card clickable (but not if clicking button)
+      card.addEventListener('click', (e) => {
+        // Don't trigger if clicking the button or its children
+        if (e.target === playButton || e.target.closest('.play-button')) {
+          return; // Button handler will take care of it
+        }
+        console.log(`Card clicked for: ${gameName}`);
         handleGameClick(gameName);
       });
     });
@@ -163,18 +196,24 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function handleGameClick(gameName) {
+  console.log('handleGameClick called with:', gameName);
   try {
     if (gameName === 'nameit') {
+      console.log('Starting Name It game...');
       startNameItGame();
     } else if (gameName === 'typeit') {
+      console.log('Navigating to Type It...');
       window.location.href = 'typeit.html';
     } else if (gameName === 'equation-pyramid') {
+      console.log('Navigating to Equation Pyramid...');
       window.location.href = 'equation-pyramid.html';
     } else {
       console.warn('Unknown game:', gameName);
+      alert('Unknown game: ' + gameName);
     }
   } catch (error) {
     console.error('Error handling game click:', error);
+    alert('Error: ' + error.message);
   }
 }
 
