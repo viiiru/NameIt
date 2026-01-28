@@ -10,6 +10,8 @@ let backgroundMusic = null;
 let endMusic = null;
 let isMuted = false;
 let selectedOperations = []; // Track selected operations for click-based gameplay
+let roundStartTime = null; // Track when round started
+const ROUND_DURATION_SECONDS = 60;
 
 const elements = {
   timeRemaining: document.getElementById("time-remaining"),
@@ -204,6 +206,7 @@ function resetGameState() {
   currentScore = 0;
   timeRemaining = 60;
   selectedOperations = [];
+  roundStartTime = null; // Reset start time
   if (elements.score) elements.score.textContent = String(currentScore);
   if (elements.timeRemaining) elements.timeRemaining.textContent = String(timeRemaining);
   if (elements.lastResult) elements.lastResult.textContent = "–";
@@ -212,6 +215,12 @@ function resetGameState() {
   if (elements.selectedOperations) elements.selectedOperations.textContent = "–";
   if (elements.calculatedResult) elements.calculatedResult.textContent = "–";
   acceptingAnswers = false;
+  
+  // Hide leaderboard when starting new round
+  const leaderboardDisplay = document.getElementById('leaderboard-display');
+  if (leaderboardDisplay) {
+    leaderboardDisplay.style.display = 'none';
+  }
   
   if (elements.stopButton) {
     elements.stopButton.style.display = "none";
@@ -235,6 +244,7 @@ function resetGameState() {
 function startRound() {
   resetGameState();
   acceptingAnswers = true;
+  roundStartTime = Date.now(); // Track when round started
   
   if (elements.startButton) {
     elements.startButton.textContent = "Playing…";
@@ -285,6 +295,19 @@ function stopGame() {
     roundTimerId = null;
   }
   
+  // Calculate duration used
+  const durationUsed = roundStartTime ? Math.round((Date.now() - roundStartTime) / 1000) : 0;
+  const actualDuration = durationUsed > 0 ? durationUsed : ROUND_DURATION_SECONDS - timeRemaining;
+  
+  // Save score to leaderboard
+  if (currentScore > 0 && typeof addScoreToLeaderboard === 'function') {
+    try {
+      addScoreToLeaderboard('equation-pyramid', currentScore, actualDuration);
+    } catch (error) {
+      console.error('Failed to save score:', error);
+    }
+  }
+  
   elements.startButton.disabled = false;
   elements.startButton.textContent = "Start Round";
   if (elements.stopButton) {
@@ -294,6 +317,13 @@ function stopGame() {
     elements.answerInput.disabled = true;
   }
   elements.gameMessage.textContent = `Game stopped. Your score: ${currentScore}`;
+  
+  // Display leaderboard
+  const leaderboardDisplay = document.getElementById('leaderboard-display');
+  if (leaderboardDisplay && typeof displayLeaderboardInGame === 'function') {
+    leaderboardDisplay.style.display = 'block';
+    displayLeaderboardInGame('equation-pyramid', leaderboardDisplay);
+  }
   
   if (backgroundMusic) {
     backgroundMusic.pause();
@@ -315,6 +345,19 @@ function endRound() {
     roundTimerId = null;
   }
   
+  // Calculate duration used
+  const durationUsed = roundStartTime ? Math.round((Date.now() - roundStartTime) / 1000) : 0;
+  const actualDuration = durationUsed > 0 ? durationUsed : ROUND_DURATION_SECONDS;
+  
+  // Save score to leaderboard
+  if (currentScore > 0 && typeof addScoreToLeaderboard === 'function') {
+    try {
+      addScoreToLeaderboard('equation-pyramid', currentScore, actualDuration);
+    } catch (error) {
+      console.error('Failed to save score:', error);
+    }
+  }
+  
   elements.startButton.disabled = false;
   elements.startButton.textContent = "Play Again";
   if (elements.stopButton) {
@@ -332,6 +375,13 @@ function endRound() {
       `Time! Your score: ${currentScore}. One correct path was: ${currentPuzzle.solutionDisplay}`;
   } else {
     elements.gameMessage.textContent = `Time! Your score: ${currentScore}`;
+  }
+  
+  // Display leaderboard
+  const leaderboardDisplay = document.getElementById('leaderboard-display');
+  if (leaderboardDisplay && typeof displayLeaderboardInGame === 'function') {
+    leaderboardDisplay.style.display = 'block';
+    displayLeaderboardInGame('equation-pyramid', leaderboardDisplay);
   }
   
   if (backgroundMusic) {

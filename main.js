@@ -8,7 +8,7 @@ function displayLeaderboard(gameType = 'nameit') {
   const LEADERBOARD_KEY = 'funGames_leaderboard';
   try {
     const stored = localStorage.getItem(LEADERBOARD_KEY);
-    const leaderboard = stored ? JSON.parse(stored) : { nameit: [], typeit: [] };
+    const leaderboard = stored ? JSON.parse(stored) : { nameit: [], typeit: [], 'equation-pyramid': [] };
     const gameScores = leaderboard[gameType] || [];
     const container = document.getElementById('leaderboard-content');
     
