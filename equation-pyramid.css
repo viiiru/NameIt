@@ -216,7 +216,10 @@ body {
   min-height: 0;
   display: flex;
   justify-content: center;
-  align-items: center;
+  /* Keep the whole pyramid visible by anchoring it to the top
+     instead of vertically centering it, which can hide the first row
+     on smaller screens. */
+  align-items: flex-start;
   padding: 10px;
   overflow-y: auto;
 }

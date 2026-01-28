@@ -92,6 +92,16 @@ function initSpeechRecognition() {
       clearTimeout(recognitionTimeoutId);
       recognitionTimeoutId = null;
     }
+
+    // If the round is still active and we're expecting answers,
+    // automatically start listening again so the player can try more words.
+    if (acceptingAnswers && currentItem && timeRemaining > 0) {
+      setTimeout(() => {
+        if (!isListening) {
+          beginListening();
+        }
+      }, 200);
+    }
   };
 
   recognition.onresult = (event) => {
@@ -326,7 +336,7 @@ function stopGame() {
     elements.skipButton.style.display = "none";
   }
   
-  elements.gameMessage.textContent = `Game stopped. Your score: ${currentScore}`;
+  elements.gameMessage.textContent = `Game stopped. Your score this round: ${currentScore}`;
   
   // Hide current game image completely before showing end picture
   if (elements.currentImage) {
@@ -402,7 +412,7 @@ function endRound() {
     elements.skipButton.style.display = "none";
   }
   
-  elements.gameMessage.textContent = `Time! Your score: ${currentScore}`;
+  elements.gameMessage.textContent = `Time! You scored ${currentScore} points this round.`;
   
   // Hide current game image completely before showing end picture
   if (elements.currentImage) {
@@ -527,10 +537,23 @@ function loadNextImage() {
 }
 
 function normalizeAnswer(text) {
-  return text
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, " ")
-    .trim();
+  if (!text || typeof text !== 'string') return '';
+  
+  // Normalize text for comparison, preserving Finnish characters (ä, ö, å)
+  // Normalize Unicode to NFC (canonical composed form) to handle different representations
+  let normalized = String(text).normalize('NFC');
+  
+  // Convert to lowercase
+  normalized = normalized.toLowerCase();
+  
+  // Replace non-alphanumeric characters (except Finnish letters ä, ö, å) with spaces
+  // Use both Unicode escapes AND literal characters to ensure compatibility
+  normalized = normalized.replace(/[^a-z0-9äöå\u00E4\u00F6\u00E5\u00C4\u00D6\u00C5]+/g, " ");
+  
+  // Trim and collapse multiple spaces to single space
+  normalized = normalized.replace(/\s+/g, " ").trim();
+  
+  return normalized;
 }
 
 function checkAnswer(recognizedText) {
@@ -616,8 +639,16 @@ function ensureBackgroundMusicPlaying() {
 function toggleMute() {
   isMuted = !isMuted;
 
+  const soundButtonInline = document.getElementById("sound-toggle-button");
+  const soundButtonFixed = document.getElementById("sound-toggle-button-fixed");
+  const label = isMuted ? "Sound: Off" : "Sound: On";
+
+  // Update both sound buttons so they stay in sync on all devices
   if (elements.soundToggleButton) {
-    elements.soundToggleButton.textContent = isMuted ? "Sound: Off" : "Sound: On";
+    elements.soundToggleButton.textContent = label;
+  }
+  if (soundButtonFixed) {
+    soundButtonFixed.textContent = label;
   }
 
   if (isMuted) {
@@ -829,6 +860,29 @@ function wireEvents() {
   if (elements.skipButton) {
     elements.skipButton.addEventListener("click", () => {
       skipWord();
+    });
+  }
+
+  // Quit button to quit game and return to menu
+  if (elements.quitButton) {
+    elements.quitButton.addEventListener("click", () => {
+      quitGame();
+    });
+  }
+
+  // Add sound button listeners for both inline and fixed buttons
+  const soundButtonInline = document.getElementById("sound-toggle-button");
+  const soundButtonFixed = document.getElementById("sound-toggle-button-fixed");
+
+  if (soundButtonInline) {
+    soundButtonInline.addEventListener("click", () => {
+      toggleMute();
+    });
+  }
+
+  if (soundButtonFixed) {
+    soundButtonFixed.addEventListener("click", () => {
+      toggleMute();
     });
   }
 }

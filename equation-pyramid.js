@@ -61,6 +61,7 @@ function generatePuzzle() {
   const opsToUse = shuffledOps.slice(0, Math.min(numOpsToUse, puzzleOps.length));
   
   let result = startNum;
+  const solutionSteps = [{ type: 'start', value: startNum }];
   opsToUse.forEach(({ op, num }) => {
     if (op === '+') {
       result += num;
@@ -71,6 +72,7 @@ function generatePuzzle() {
     } else { // '/'
       result = Math.round(result / num);
     }
+    solutionSteps.push({ type: 'operation', op, num });
   });
   
   // Ensure target is positive and reasonable
@@ -82,6 +84,15 @@ function generatePuzzle() {
     operations: puzzleOps, // All operations available
     target: result,
     startNumber: startNum,
+    // One example of a correct solution path (what the player "should" pick)
+    solutionSteps,
+    solutionDisplay: solutionSteps
+      .map(step =>
+        step.type === 'start'
+          ? String(step.value)
+          : `${step.op}${step.num}`
+      )
+      .join(', '),
     // Player can use any combination of operations to reach target
   };
 }
@@ -315,7 +326,13 @@ function endRound() {
   if (elements.submitButton) {
     elements.submitButton.style.display = "none";
   }
-  elements.gameMessage.textContent = `Time! Your score: ${currentScore}`;
+  // Show score and, if available, one correct solution for learning
+  if (currentPuzzle && currentPuzzle.solutionDisplay) {
+    elements.gameMessage.textContent =
+      `Time! Your score: ${currentScore}. One correct path was: ${currentPuzzle.solutionDisplay}`;
+  } else {
+    elements.gameMessage.textContent = `Time! Your score: ${currentScore}`;
+  }
   
   if (backgroundMusic) {
     backgroundMusic.pause();
@@ -555,8 +572,17 @@ function handleWrongAnswer(answer, calculatedResult) {
   elements.lastResult.classList.remove("status-ok");
   elements.lastResult.classList.add("status-error");
   
-  if (calculatedResult !== null) {
-    elements.gameMessage.textContent = `You got ${calculatedResult}, but target is ${currentPuzzle.target}. Try again!`;
+  if (calculatedResult !== null && currentPuzzle) {
+    // Show what the player got, what the target is,
+    // and one correct solution path they could have chosen.
+    if (currentPuzzle.solutionDisplay) {
+      elements.gameMessage.textContent =
+        `You got ${calculatedResult}, but target is ${currentPuzzle.target}. ` +
+        `One correct path was: ${currentPuzzle.solutionDisplay}`;
+    } else {
+      elements.gameMessage.textContent =
+        `You got ${calculatedResult}, but target is ${currentPuzzle.target}. Try again!`;
+    }
   }
   
   playBeep("bad");

@@ -5,6 +5,7 @@ let roundDurationSeconds = 30;
 const elements = {
   timeRemaining: document.getElementById("time-remaining"),
   score: document.getElementById("score"),
+  scoreDisplayLarge: document.getElementById("score-display-large"),
   lastResult: document.getElementById("last-result"),
   imageFrame: document.getElementById("image-frame"),
   currentImage: document.getElementById("current-image"),
@@ -32,6 +33,8 @@ let activeCategory = "all";
 let backgroundMusic = null;
 let endMusic = null;
 let isMuted = false;
+let answerCheckTimeout = null; // For debouncing auto-check
+let normalizedAnswersCache = null; // Cache normalized answers for current item
 
 function resetGameState() {
   // Get the selected duration from the dropdown
@@ -48,14 +51,16 @@ function resetGameState() {
   currentScore = 0;
   timeRemaining = roundDurationSeconds;
   if (elements.score) elements.score.textContent = String(currentScore);
+  if (elements.scoreDisplayLarge) elements.scoreDisplayLarge.textContent = `Score: ${currentScore}`;
   if (elements.timeRemaining) elements.timeRemaining.textContent = String(timeRemaining);
   if (elements.lastResult) elements.lastResult.textContent = "–";
   if (elements.lastResult) elements.lastResult.classList.remove("status-ok", "status-error");
   if (elements.gameMessage) elements.gameMessage.textContent = "";
   acceptingAnswers = false;
 
-  // Reset the image pool
+  // Reset the image pool and clear answer cache
   remainingItems = [];
+  normalizedAnswersCache = null;
 
   // Ensure end image is hidden
   if (elements.endPlaceholder) {
@@ -111,6 +116,12 @@ function startRound() {
     endMusic.currentTime = 0;
   }
   
+  // Show score display above image
+  if (elements.scoreDisplayLarge) {
+    elements.scoreDisplayLarge.style.display = "block";
+    elements.scoreDisplayLarge.textContent = `Score: ${currentScore}`;
+  }
+  
   setBackgroundVolume("playing");
   ensureBackgroundMusicPlaying();
 
@@ -146,13 +157,23 @@ function stopGame() {
   if (elements.answerInput) {
     elements.answerInput.disabled = true;
   }
-  elements.gameMessage.textContent = `Game stopped. Your score: ${currentScore}`;
+  // Clear any error messages and set score message
+  elements.gameMessage.textContent = "";
+  if (elements.scoreDisplayLarge) {
+    elements.scoreDisplayLarge.textContent = `Score: ${currentScore}`;
+    elements.scoreDisplayLarge.style.display = "block";
+  }
   
-  // Hide current game image
+  // Hide current game image completely
   if (elements.currentImage) {
     elements.currentImage.classList.add("hidden");
     elements.currentImage.classList.remove("visible");
     elements.currentImage.src = "";
+  }
+  
+  // Hide image placeholder to ensure end image shows properly
+  if (elements.imagePlaceholder) {
+    elements.imagePlaceholder.classList.add("hidden");
   }
   
   // Show end picture
@@ -192,13 +213,23 @@ function endRound() {
   if (elements.answerInput) {
     elements.answerInput.disabled = true;
   }
-  elements.gameMessage.textContent = `Time! Your score: ${currentScore}`;
+  // Clear any error messages
+  elements.gameMessage.textContent = "";
+  if (elements.scoreDisplayLarge) {
+    elements.scoreDisplayLarge.textContent = `Final Score: ${currentScore}`;
+    elements.scoreDisplayLarge.style.display = "block";
+  }
   
-  // Hide current game image
+  // Hide current game image completely
   if (elements.currentImage) {
     elements.currentImage.classList.add("hidden");
     elements.currentImage.classList.remove("visible");
     elements.currentImage.src = "";
+  }
+  
+  // Hide image placeholder to ensure end image shows properly
+  if (elements.imagePlaceholder) {
+    elements.imagePlaceholder.classList.add("hidden");
   }
   
   // Show end picture
@@ -221,8 +252,17 @@ function endRound() {
 }
 
 function loadNextImage() {
+  // Don't load new images if the round has ended (score message should stay visible)
+  if (!acceptingAnswers) {
+    return;
+  }
+  
   if (!Array.isArray(IMAGE_ITEMS) || IMAGE_ITEMS.length === 0) {
-    elements.gameMessage.textContent = "No images configured. Add items in nameit-images.js.";
+    // Don't show error messages - just log to console
+    if (acceptingAnswers) {
+      console.error("No images configured. Add items in nameit-images.js.");
+      elements.gameMessage.textContent = "";
+    }
     return;
   }
 
@@ -232,7 +272,11 @@ function loadNextImage() {
       : IMAGE_ITEMS.filter((item) => item.category === activeCategory);
 
   if (!Array.isArray(sourceItems) || sourceItems.length === 0) {
-    elements.gameMessage.textContent = "No images in this category. Add some in nameit-images.js.";
+    // Don't show error messages - just log to console
+    if (acceptingAnswers) {
+      console.error("No images in this category. Add some in nameit-images.js.");
+      elements.gameMessage.textContent = "";
+    }
     return;
   }
 
@@ -249,32 +293,51 @@ function loadNextImage() {
   currentItem = remainingItems[randomIndex];
   remainingItems.splice(randomIndex, 1);
   
+  // Pre-normalize all answers for this item to speed up checking
+  normalizedAnswersCache = currentItem.answers.map(ans => 
+    ans && typeof ans === 'string' ? normalizeAnswer(ans) : null
+  ).filter(ans => ans !== null);
+  
   console.log("Selected:", currentItem.id, "Remaining in pool:", remainingItems.length);
 
+  // Hide placeholder immediately for faster transition
+  elements.imagePlaceholder.classList.add("hidden");
+  
+  // Set image source immediately - browser will cache it
   elements.currentImage.src = currentItem.src;
   elements.currentImage.alt = currentItem.id;
   
+  // Optimized image display - check if already loaded (cached)
   if (elements.currentImage.complete && elements.currentImage.naturalWidth > 0) {
-    elements.imagePlaceholder.classList.add("hidden");
+    // Image is cached - show instantly
     elements.currentImage.classList.remove("hidden");
     elements.currentImage.classList.add("visible");
     if (elements.loadingIndicator) {
       elements.loadingIndicator.classList.add("hidden");
     }
+    // Focus input immediately for fastest gameplay
+    if (elements.answerInput) {
+      elements.answerInput.focus();
+    }
   } else {
+    // Image needs to load - show loading indicator briefly
     elements.currentImage.classList.remove("visible");
     elements.currentImage.classList.add("hidden");
     if (elements.loadingIndicator) {
       elements.loadingIndicator.classList.remove("hidden");
     }
     
+    // Fast image load handler
     const showImage = () => {
       if (elements.loadingIndicator) {
         elements.loadingIndicator.classList.add("hidden");
       }
-      elements.imagePlaceholder.classList.add("hidden");
       elements.currentImage.classList.remove("hidden");
       elements.currentImage.classList.add("visible");
+      // Focus input immediately when image loads
+      if (elements.answerInput) {
+        elements.answerInput.focus();
+      }
     };
     
     elements.currentImage.addEventListener("load", showImage, { once: true });
@@ -282,38 +345,83 @@ function loadNextImage() {
       if (elements.loadingIndicator) {
         elements.loadingIndicator.classList.add("hidden");
       }
-      if (elements.gameMessage) {
-        elements.gameMessage.textContent = `Image not found: ${currentItem.id}`;
+      // Log error but don't interrupt gameplay
+      if (acceptingAnswers) {
+        console.error(`Image not found: ${currentItem.id}`);
+      } else {
+        console.error(`Image not found: ${currentItem.id} (round ended)`);
+      }
+      // Still focus input even if image fails
+      if (elements.answerInput) {
+        elements.answerInput.focus();
       }
     }, { once: true });
   }
   
-  // Clear input and focus for next answer
-  if (elements.answerInput) {
-    elements.answerInput.value = "";
-    elements.answerInput.focus();
-  }
+  // Input is already cleared in checkAnswer, focus happens in loadNextImage for faster flow
 }
 
 function normalizeAnswer(text) {
-  return text
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, " ")
-    .trim();
+  if (!text || typeof text !== 'string') return '';
+  
+  // Optimized normalization - combine operations for speed
+  // Normalize Unicode to NFC and convert to lowercase in one pass
+  let normalized = String(text).normalize('NFC').toLowerCase();
+  
+  // Single regex replacement: remove non-alphanumeric (except Finnish letters) and collapse spaces
+  normalized = normalized.replace(/[^a-z0-9äöå\u00E4\u00F6\u00E5\u00C4\u00D6\u00C5]+/g, " ").trim();
+  
+  return normalized;
 }
 
 function checkAnswer(inputText) {
-  if (!currentItem || !inputText.trim()) return;
+  // Fast validation checks
+  if (!currentItem || !inputText || typeof inputText !== 'string') return;
+  
+  const trimmedInput = inputText.trim();
+  if (!trimmedInput) return;
 
-  const normInput = normalizeAnswer(inputText);
-  const accepted = currentItem.answers.some(
-    (ans) => normalizeAnswer(ans) === normInput
-  );
+  const normInput = normalizeAnswer(trimmedInput);
+  if (!normInput || !Array.isArray(currentItem.answers) || currentItem.answers.length === 0) {
+    return;
+  }
+  
+  // Ultra-fast exact match check using pre-normalized cache
+  let accepted = false;
+  if (normalizedAnswersCache) {
+    // Use cached normalized answers for instant comparison
+    for (let i = 0; i < normalizedAnswersCache.length; i++) {
+      if (normalizedAnswersCache[i] === normInput) {
+        accepted = true;
+        break; // Exit early on first match
+      }
+    }
+  } else {
+    // Fallback if cache not available
+    for (let i = 0; i < currentItem.answers.length; i++) {
+      const ans = currentItem.answers[i];
+      if (ans && typeof ans === 'string' && normalizeAnswer(ans) === normInput) {
+        accepted = true;
+        break;
+      }
+    }
+  }
+
+  // Clear any pending auto-check immediately
+  if (answerCheckTimeout) {
+    clearTimeout(answerCheckTimeout);
+    answerCheckTimeout = null;
+  }
 
   if (accepted) {
-    handleCorrectAnswer(inputText.trim());
+    // Clear the input immediately for faster gameplay
+    if (elements.answerInput) {
+      elements.answerInput.value = "";
+    }
+    handleCorrectAnswer(trimmedInput);
   } else {
-    handleWrongAnswer(inputText.trim());
+    // Don't show wrong answer immediately - let user continue typing
+    // Wrong answer will be shown after the timeout if they stop typing
   }
 }
 
@@ -396,8 +504,14 @@ function toggleMute() {
 }
 
 function handleCorrectAnswer(answer) {
+  // Update score immediately
   currentScore += 1;
   elements.score.textContent = String(currentScore);
+  if (elements.scoreDisplayLarge) {
+    elements.scoreDisplayLarge.textContent = `Score: ${currentScore}`;
+  }
+  
+  // Show green feedback
   elements.lastResult.textContent = `"${answer}"`;
   elements.lastResult.classList.remove("status-error");
   elements.lastResult.classList.add("status-ok");
@@ -407,15 +521,17 @@ function handleCorrectAnswer(answer) {
   void elements.imageFrame.offsetWidth;
   elements.imageFrame.classList.add("correct");
 
+  // Play sound asynchronously (don't wait for it)
   playCorrectSound();
 
-  // Wait to show green word, then move to next image
+  // Ultra-fast transition - minimal delay (10ms), then instantly load next image
   setTimeout(() => {
     loadNextImage();
-  }, 800);
+  }, 10);
 }
 
 function handleWrongAnswer(answer) {
+  // Only show wrong answer if we're sure it's wrong (not just a partial match)
   elements.lastResult.textContent = `"${answer}"`;
   elements.lastResult.classList.remove("status-ok");
   elements.lastResult.classList.add("status-error");
@@ -426,9 +542,8 @@ function handleWrongAnswer(answer) {
 
   playBeep("bad");
   
-  // Clear input for retry
+  // Don't clear input - let user continue typing for faster retry
   if (elements.answerInput) {
-    elements.answerInput.value = "";
     elements.answerInput.focus();
   }
 }
@@ -505,11 +620,16 @@ function wireEvents() {
     });
   }
 
-  // Handle text input - check on Enter key
+  // Handle text input - check on Enter key and auto-check as user types
   if (elements.answerInput) {
     elements.answerInput.addEventListener("keydown", (e) => {
       if (e.key === "Enter" && acceptingAnswers && currentItem) {
         e.preventDefault();
+        // Clear any pending auto-check
+        if (answerCheckTimeout) {
+          clearTimeout(answerCheckTimeout);
+          answerCheckTimeout = null;
+        }
         const inputValue = elements.answerInput.value.trim();
         if (inputValue) {
           checkAnswer(inputValue);
@@ -517,14 +637,76 @@ function wireEvents() {
       }
     });
     
-    // Also update last result as user types (for real-time feedback)
+    // Auto-check answer as user types (with fast debounce and immediate exact match checking)
     elements.answerInput.addEventListener("input", (e) => {
-      if (acceptingAnswers && e.target.value.trim()) {
-        elements.lastResult.textContent = `"${e.target.value}"`;
+      const inputValue = e.target.value.trim();
+      
+      if (acceptingAnswers && currentItem && inputValue) {
+        // Update last result display
+        elements.lastResult.textContent = `"${inputValue}"`;
         elements.lastResult.classList.remove("status-ok", "status-error");
-      } else if (!e.target.value.trim()) {
+        
+        // Clear any pending check
+        if (answerCheckTimeout) {
+          clearTimeout(answerCheckTimeout);
+          answerCheckTimeout = null;
+        }
+        
+        // Instant check: normalize and compare immediately on every keystroke
+        const normInput = normalizeAnswer(inputValue);
+        let exactMatch = false;
+        
+        // Use cached normalized answers for instant comparison
+        if (normalizedAnswersCache) {
+          for (let i = 0; i < normalizedAnswersCache.length; i++) {
+            if (normalizedAnswersCache[i] === normInput) {
+              exactMatch = true;
+              break;
+            }
+          }
+        }
+        
+        // Check immediately - no delay at all for exact matches!
+        if (exactMatch) {
+          checkAnswer(inputValue);
+        } else {
+          // For partial/wrong matches, clear any pending timeout and set a very short one
+          if (answerCheckTimeout) {
+            clearTimeout(answerCheckTimeout);
+            answerCheckTimeout = null;
+          }
+          // Minimal delay (30ms) only to avoid showing wrong answer while still typing
+          answerCheckTimeout = setTimeout(() => {
+            if (acceptingAnswers && currentItem) {
+              const finalValue = elements.answerInput.value.trim();
+              if (finalValue === inputValue) {
+                // Final check - is it a match now?
+                const finalNorm = normalizeAnswer(finalValue);
+                let isMatch = false;
+                if (normalizedAnswersCache) {
+                  for (let i = 0; i < normalizedAnswersCache.length; i++) {
+                    if (normalizedAnswersCache[i] === finalNorm) {
+                      isMatch = true;
+                      break;
+                    }
+                  }
+                }
+                if (!isMatch && finalValue.length > 0) {
+                  // Show wrong answer only if definitely wrong and user stopped typing
+                  handleWrongAnswer(finalValue);
+                }
+              }
+            }
+          }, 30);
+        }
+      } else if (!inputValue) {
         elements.lastResult.textContent = "–";
         elements.lastResult.classList.remove("status-ok", "status-error");
+        // Clear pending check if input is cleared
+        if (answerCheckTimeout) {
+          clearTimeout(answerCheckTimeout);
+          answerCheckTimeout = null;
+        }
       }
     });
   }
