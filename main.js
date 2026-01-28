@@ -48,69 +48,133 @@ function escapeHtml(text) {
 
 // Initialize page
 document.addEventListener('DOMContentLoaded', () => {
-  // Load and display saved player name
-  const nameInput = document.getElementById('player-name-input');
-  if (nameInput) {
-    const savedName = localStorage.getItem(PLAYER_NAME_KEY);
-    if (savedName) {
-      nameInput.value = savedName;
-    }
-    nameInput.addEventListener('blur', () => {
+  try {
+    // Load and display saved player name
+    const nameInput = document.getElementById('player-name-input');
+    const saveNameButton = document.getElementById('save-name-button');
+    const nameSavedIndicator = document.getElementById('name-saved-indicator');
+    
+    function savePlayerName() {
+      if (!nameInput) return false;
       const name = nameInput.value.trim();
       if (name) {
-        localStorage.setItem(PLAYER_NAME_KEY, name);
+        try {
+          localStorage.setItem(PLAYER_NAME_KEY, name);
+          // Show saved indicator
+          if (nameSavedIndicator) {
+            nameSavedIndicator.style.display = 'inline';
+            setTimeout(() => {
+              nameSavedIndicator.style.display = 'none';
+            }, 2000);
+          }
+          return true;
+        } catch (error) {
+          console.error('Failed to save player name:', error);
+        }
       }
-    });
-    nameInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        nameInput.blur();
-      }
-    });
-  }
-  
-  // Initialize leaderboard tabs
-  const leaderboardTabs = document.querySelectorAll('.leaderboard-tab');
-  leaderboardTabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      leaderboardTabs.forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-      const gameType = tab.dataset.game;
-      displayLeaderboard(gameType);
-    });
-  });
-  
-  // Display initial leaderboard
-  displayLeaderboard('nameit');
-  
-  const gameCards = document.querySelectorAll('.game-card');
-  
-  gameCards.forEach(card => {
-    const playButton = card.querySelector('.play-button');
-    const gameName = card.dataset.game;
+      return false;
+    }
     
-    // Make entire card clickable
-    card.addEventListener('click', (e) => {
-      // Don't trigger if clicking the button directly (it has its own handler)
-      if (e.target !== playButton) {
+    if (nameInput) {
+      try {
+        const savedName = localStorage.getItem(PLAYER_NAME_KEY);
+        if (savedName) {
+          nameInput.value = savedName;
+        }
+      } catch (error) {
+        console.error('Failed to load player name:', error);
+      }
+      
+      // Save on blur
+      nameInput.addEventListener('blur', () => {
+        savePlayerName();
+      });
+      
+      // Save on Enter key
+      nameInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          savePlayerName();
+          nameInput.blur();
+        }
+      });
+    }
+    
+    // Save button click handler
+    if (saveNameButton) {
+      saveNameButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        savePlayerName();
+        if (nameInput) {
+          nameInput.blur();
+        }
+      });
+    }
+    
+    // Initialize leaderboard tabs
+    try {
+      const leaderboardTabs = document.querySelectorAll('.leaderboard-tab');
+      leaderboardTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          leaderboardTabs.forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          const gameType = tab.dataset.game;
+          displayLeaderboard(gameType);
+        });
+      });
+      
+      // Display initial leaderboard
+      displayLeaderboard('nameit');
+    } catch (error) {
+      console.error('Failed to initialize leaderboard:', error);
+    }
+    
+    // Initialize game cards and buttons
+    const gameCards = document.querySelectorAll('.game-card');
+    
+    gameCards.forEach(card => {
+      const playButton = card.querySelector('.play-button');
+      const gameName = card.dataset.game;
+      
+      if (!playButton || !gameName) {
+        console.warn('Game card missing button or game name:', card);
+        return;
+      }
+      
+      // Make entire card clickable
+      card.addEventListener('click', (e) => {
+        // Don't trigger if clicking the button directly (it has its own handler)
+        if (e.target !== playButton && !e.target.closest('.play-button')) {
+          handleGameClick(gameName);
+        }
+      });
+      
+      // Button click handler
+      playButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation(); // Prevent card click
         handleGameClick(gameName);
-      }
+      });
     });
-    
-    // Button click handler
-    playButton.addEventListener('click', (e) => {
-      e.stopPropagation(); // Prevent card click
-      handleGameClick(gameName);
-    });
-  });
+  } catch (error) {
+    console.error('Error initializing page:', error);
+  }
 });
 
 function handleGameClick(gameName) {
-  if (gameName === 'nameit') {
-    startNameItGame();
-  } else if (gameName === 'typeit') {
-    window.location.href = 'typeit.html';
-  } else if (gameName === 'equation-pyramid') {
-    window.location.href = 'equation-pyramid.html';
+  try {
+    if (gameName === 'nameit') {
+      startNameItGame();
+    } else if (gameName === 'typeit') {
+      window.location.href = 'typeit.html';
+    } else if (gameName === 'equation-pyramid') {
+      window.location.href = 'equation-pyramid.html';
+    } else {
+      console.warn('Unknown game:', gameName);
+    }
+  } catch (error) {
+    console.error('Error handling game click:', error);
   }
 }
 

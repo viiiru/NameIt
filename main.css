@@ -53,6 +53,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 .player-name-label {
@@ -81,6 +82,48 @@ body {
 
 .player-name-input::placeholder {
   color: #94a3b8;
+}
+
+.save-name-button {
+  padding: 8px 12px;
+  font-size: 1.2rem;
+  border-radius: 8px;
+  border: 2px solid rgba(34, 197, 94, 0.6);
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: white;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.4);
+  font-weight: 700;
+  min-width: 40px;
+}
+
+.save-name-button:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.6);
+}
+
+.save-name-button:active {
+  transform: scale(0.95);
+}
+
+.name-saved-indicator {
+  color: #22c55e;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-left: 5px;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .games-container {
