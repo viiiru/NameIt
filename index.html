@@ -14,6 +14,17 @@
       <header class="header">
         <h1 class="site-title">Fun Games</h1>
         <p class="site-subtitle">Play fun and educational games</p>
+        <div class="player-name-section">
+          <label for="player-name-input" class="player-name-label">Your Name:</label>
+          <input 
+            type="text" 
+            id="player-name-input" 
+            class="player-name-input" 
+            placeholder="Enter your name"
+            maxlength="20"
+            autocomplete="off"
+          />
+        </div>
       </header>
 
       <main class="games-container">
@@ -44,11 +55,23 @@
         </div>
       </main>
 
+      <section class="leaderboard-section">
+        <h2 class="leaderboard-title">🏆 Fastest Players</h2>
+        <div class="leaderboard-tabs">
+          <button class="leaderboard-tab active" data-game="nameit">Name It</button>
+          <button class="leaderboard-tab" data-game="typeit">Type It</button>
+        </div>
+        <div id="leaderboard-content" class="leaderboard-content">
+          <!-- Leaderboard will be populated here -->
+        </div>
+      </section>
+
       <footer class="footer">
         <span>Built for fun and learning</span>
       </footer>
     </div>
 
+    <script src="leaderboard.js"></script>
     <script src="main.js"></script>
   </body>
 </html>

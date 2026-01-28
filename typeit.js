@@ -66,6 +66,12 @@ function resetGameState() {
   if (elements.endPlaceholder) {
     elements.endPlaceholder.classList.add("hidden");
   }
+  
+  // Hide leaderboard when resetting
+  const leaderboardSection = document.getElementById('leaderboard-section');
+  if (leaderboardSection) {
+    leaderboardSection.style.display = 'none';
+  }
 
   // Hide stop button
   if (elements.stopButton) {
@@ -157,6 +163,14 @@ function stopGame() {
   if (elements.answerInput) {
     elements.answerInput.disabled = true;
   }
+  // Calculate actual duration used
+  const actualDuration = roundDurationSeconds - timeRemaining;
+  
+  // Save score to leaderboard (if stopped early, still save the score)
+  if (typeof addScoreToLeaderboard === 'function' && currentScore > 0) {
+    addScoreToLeaderboard('typeit', currentScore, actualDuration);
+  }
+  
   // Clear any error messages and set score message
   elements.gameMessage.textContent = "";
   if (elements.scoreDisplayLarge) {
@@ -213,6 +227,22 @@ function endRound() {
   if (elements.answerInput) {
     elements.answerInput.disabled = true;
   }
+  // Calculate actual duration used
+  const actualDuration = roundDurationSeconds - timeRemaining;
+  
+  // Save score to leaderboard
+  if (typeof addScoreToLeaderboard === 'function') {
+    addScoreToLeaderboard('typeit', currentScore, actualDuration);
+    
+    // Display leaderboard
+    const leaderboardSection = document.getElementById('leaderboard-section');
+    const leaderboardContent = document.getElementById('leaderboard-content-game');
+    if (leaderboardSection && leaderboardContent && typeof displayLeaderboardInGame === 'function') {
+      displayLeaderboardInGame('typeit', leaderboardContent);
+      leaderboardSection.style.display = 'block';
+    }
+  }
+  
   // Clear any error messages
   elements.gameMessage.textContent = "";
   if (elements.scoreDisplayLarge) {

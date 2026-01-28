@@ -2,9 +2,86 @@
 
 // Check if microphone permission was already granted
 const MIC_PERMISSION_KEY = 'funGames_micPermission';
+const PLAYER_NAME_KEY = 'funGames_playerName';
+
+function displayLeaderboard(gameType = 'nameit') {
+  const LEADERBOARD_KEY = 'funGames_leaderboard';
+  try {
+    const stored = localStorage.getItem(LEADERBOARD_KEY);
+    const leaderboard = stored ? JSON.parse(stored) : { nameit: [], typeit: [] };
+    const gameScores = leaderboard[gameType] || [];
+    const container = document.getElementById('leaderboard-content');
+    
+    if (!container) return;
+    
+    if (gameScores.length === 0) {
+      container.innerHTML = '<p class="leaderboard-empty">No scores yet. Be the first to play!</p>';
+      return;
+    }
+    
+    let html = '<div class="leaderboard-list">';
+    gameScores.forEach((entry, index) => {
+      const rank = index + 1;
+      const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `${rank}.`;
+      html += `
+        <div class="leaderboard-item">
+          <span class="leaderboard-rank">${medal}</span>
+          <span class="leaderboard-name">${escapeHtml(entry.name)}</span>
+          <span class="leaderboard-score">${entry.score} pts</span>
+          <span class="leaderboard-time">${entry.duration}s</span>
+          <span class="leaderboard-rate">${entry.scorePerSecond} pts/s</span>
+        </div>
+      `;
+    });
+    html += '</div>';
+    container.innerHTML = html;
+  } catch (error) {
+    console.error('Failed to display leaderboard:', error);
+  }
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
 
 // Initialize page
 document.addEventListener('DOMContentLoaded', () => {
+  // Load and display saved player name
+  const nameInput = document.getElementById('player-name-input');
+  if (nameInput) {
+    const savedName = localStorage.getItem(PLAYER_NAME_KEY);
+    if (savedName) {
+      nameInput.value = savedName;
+    }
+    nameInput.addEventListener('blur', () => {
+      const name = nameInput.value.trim();
+      if (name) {
+        localStorage.setItem(PLAYER_NAME_KEY, name);
+      }
+    });
+    nameInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        nameInput.blur();
+      }
+    });
+  }
+  
+  // Initialize leaderboard tabs
+  const leaderboardTabs = document.querySelectorAll('.leaderboard-tab');
+  leaderboardTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      leaderboardTabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const gameType = tab.dataset.game;
+      displayLeaderboard(gameType);
+    });
+  });
+  
+  // Display initial leaderboard
+  displayLeaderboard('nameit');
+  
   const gameCards = document.querySelectorAll('.game-card');
   
   gameCards.forEach(card => {

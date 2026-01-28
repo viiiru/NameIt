@@ -215,6 +215,12 @@ function resetGameState() {
   if (elements.endPlaceholder) {
     elements.endPlaceholder.classList.add("hidden");
   }
+  
+  // Hide leaderboard when resetting
+  const leaderboardSection = document.getElementById('leaderboard-section');
+  if (leaderboardSection) {
+    leaderboardSection.style.display = 'none';
+  }
 
   // Hide stop button when resetting
   if (elements.stopButton) {
@@ -336,6 +342,22 @@ function stopGame() {
     elements.skipButton.style.display = "none";
   }
   
+  // Calculate actual duration used
+  const actualDuration = roundDurationSeconds - timeRemaining;
+  
+  // Save score to leaderboard (if stopped early, still save the score)
+  if (typeof addScoreToLeaderboard === 'function' && currentScore > 0) {
+    addScoreToLeaderboard('nameit', currentScore, actualDuration);
+    
+    // Display leaderboard
+    const leaderboardSection = document.getElementById('leaderboard-section');
+    const leaderboardContent = document.getElementById('leaderboard-content-game');
+    if (leaderboardSection && leaderboardContent && typeof displayLeaderboardInGame === 'function') {
+      displayLeaderboardInGame('nameit', leaderboardContent);
+      leaderboardSection.style.display = 'block';
+    }
+  }
+  
   elements.gameMessage.textContent = `Game stopped. Your score this round: ${currentScore}`;
   
   // Hide current game image completely before showing end picture
@@ -410,6 +432,22 @@ function endRound() {
   // Hide skip button
   if (elements.skipButton) {
     elements.skipButton.style.display = "none";
+  }
+  
+  // Calculate actual duration used
+  const actualDuration = roundDurationSeconds - timeRemaining;
+  
+  // Save score to leaderboard
+  if (typeof addScoreToLeaderboard === 'function') {
+    addScoreToLeaderboard('nameit', currentScore, actualDuration);
+    
+    // Display leaderboard
+    const leaderboardSection = document.getElementById('leaderboard-section');
+    const leaderboardContent = document.getElementById('leaderboard-content-game');
+    if (leaderboardSection && leaderboardContent && typeof displayLeaderboardInGame === 'function') {
+      displayLeaderboardInGame('nameit', leaderboardContent);
+      leaderboardSection.style.display = 'block';
+    }
   }
   
   elements.gameMessage.textContent = `Time! You scored ${currentScore} points this round.`;
