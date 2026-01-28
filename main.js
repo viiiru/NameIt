@@ -2,7 +2,7 @@
 
 // Check if microphone permission was already granted
 const MIC_PERMISSION_KEY = 'funGames_micPermission';
-const PLAYER_NAME_KEY = 'funGames_playerName';
+// PLAYER_NAME_KEY is declared in leaderboard.js
 
 function displayLeaderboard(gameType = 'nameit') {
   const LEADERBOARD_KEY = 'funGames_leaderboard';
