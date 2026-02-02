@@ -923,6 +923,18 @@ function wireEvents() {
       toggleMute();
     });
   }
+
+  // Allow changing round duration before a round starts
+  if (elements.durationSelect) {
+    elements.durationSelect.addEventListener("change", () => {
+      if (!acceptingAnswers) {
+        roundDurationSeconds =
+          parseInt(elements.durationSelect.value, 10) || 30;
+        timeRemaining = roundDurationSeconds;
+        elements.timeRemaining.textContent = String(timeRemaining);
+      }
+    });
+  }
 }
 
 function skipWord() {
@@ -954,16 +966,7 @@ function skipWord() {
   // Load next image immediately
   loadNextImage();
 }
-  if (elements.durationSelect) {
-    elements.durationSelect.addEventListener("change", () => {
-      if (!acceptingAnswers) {
-        roundDurationSeconds = parseInt(elements.durationSelect.value, 10) || 30;
-        timeRemaining = roundDurationSeconds;
-        elements.timeRemaining.textContent = String(timeRemaining);
-      }
-    });
-  }
-}
+
 
 function preloadImages() {
   // Preload all images aggressively for faster gameplay
