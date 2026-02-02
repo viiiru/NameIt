@@ -9,6 +9,7 @@
 const KT_ELEMENTS = {
   board: document.getElementById("board"),
   moveCount: document.getElementById("move-count"),
+  timeElapsed: document.getElementById("time-elapsed"),
   boardSizeSelect: document.getElementById("board-size-select"),
   restartButton: document.getElementById("restart-button"),
   undoButton: document.getElementById("undo-button"),
@@ -22,6 +23,9 @@ let ktVisited = []; // boolean matrix [row][col]
 let ktMoveOrder = []; // matrix with move numbers
 let ktMoveHistory = []; // stack of { row, col }
 let ktGameOver = false;
+let ktHasStarted = false;
+let ktStartTime = null;
+let ktTimerId = null;
 
 // All 8 knight move offsets: (±2, ±1) and (±1, ±2)
 const KNIGHT_OFFSETS = [
@@ -47,6 +51,17 @@ function ktInitState() {
   );
   ktMoveHistory = [];
   ktGameOver = false;
+  ktHasStarted = false;
+  ktStartTime = null;
+
+  // Reset timer display and interval
+  if (ktTimerId) {
+    clearInterval(ktTimerId);
+    ktTimerId = null;
+  }
+  if (KT_ELEMENTS.timeElapsed) {
+    KT_ELEMENTS.timeElapsed.textContent = "0";
+  }
 
   // Start from the center-ish square for nicer patterns
   const startRow = Math.floor(ktBoardSize / 2);
@@ -60,6 +75,7 @@ function ktInitState() {
   if (KT_ELEMENTS.moveCount) {
     KT_ELEMENTS.moveCount.textContent = String(1);
   }
+  // First visited square counts as move 1 but timer starts on first user move.
 
   if (KT_ELEMENTS.gameMessage) {
     KT_ELEMENTS.gameMessage.textContent =
@@ -96,6 +112,20 @@ function ktMakeMove(targetRow, targetCol) {
   );
   if (!isLegal) {
     return; // ignore illegal clicks
+  }
+
+  // Start timer on the very first move the player makes
+  if (!ktHasStarted) {
+    ktHasStarted = true;
+    ktStartTime = Date.now();
+    if (KT_ELEMENTS.timeElapsed) {
+      KT_ELEMENTS.timeElapsed.textContent = "0";
+    }
+    ktTimerId = setInterval(() => {
+      if (!ktHasStarted || ktGameOver || !KT_ELEMENTS.timeElapsed) return;
+      const seconds = Math.floor((Date.now() - ktStartTime) / 1000);
+      KT_ELEMENTS.timeElapsed.textContent = String(seconds);
+    }, 1000);
   }
 
   ktKnightPos = { row: targetRow, col: targetCol };
@@ -153,22 +183,40 @@ function ktCheckGameState() {
 
   if (visitedCount === totalSquares) {
     ktGameOver = true;
+    // Stop timer and compute duration
+    let durationSeconds = visitedCount;
+    if (ktStartTime) {
+      durationSeconds = Math.max(
+        1,
+        Math.floor((Date.now() - ktStartTime) / 1000)
+      );
+    }
+    if (ktTimerId) {
+      clearInterval(ktTimerId);
+      ktTimerId = null;
+    }
     if (KT_ELEMENTS.gameMessage) {
       KT_ELEMENTS.gameMessage.textContent =
         "Perfect! You completed a full Knight's Tour!";
       KT_ELEMENTS.gameMessage.classList.add("status-ok");
     }
 
-    // Save to shared leaderboard as a puzzle game: higher score = fewer moves wasted.
-    // Here, score is simply total squares, duration approximated by moves.
+    // Save to shared leaderboard as a puzzle game.
+    // Score = number of squares visited (always totalSquares on success),
+    // duration = actual time in seconds (lower is better for this game).
     if (typeof addScoreToLeaderboard === "function") {
-      addScoreToLeaderboard("knights-tour", visitedCount, visitedCount);
+      addScoreToLeaderboard("knights-tour", visitedCount, durationSeconds);
     }
     return;
   }
 
   if (legalMoves.length === 0) {
     ktGameOver = true;
+    // Stop timer on failure as well
+    if (ktTimerId) {
+      clearInterval(ktTimerId);
+      ktTimerId = null;
+    }
     if (KT_ELEMENTS.gameMessage) {
       KT_ELEMENTS.gameMessage.textContent =
         "No legal moves left. Tour failed – try again!";

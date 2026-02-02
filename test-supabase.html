@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Supabase Test</title>
+  </head>
+  <body>
+    <h1>Supabase Test</h1>
+    <p>Avaa selaimen console nähdäksesi tulokset.</p>
+
+    <script type="module">
+      // 1. Lisää Supabase client
+      import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+
+      // 2. Laita tähän oma Supabase URL ja anon key
+      const supabaseUrl = "https://ikvbchnjrfkodlwspthg.supabase.co"; 
+      const supabaseAnonKey = "sb_publishable_dQJ_ZV-i4UBij1TjiIT2qQ_2VPsjYbJ";
+
+      const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+      // 3. Funktio, joka hakee top 10 riviä Knights Tour -pelistä
+      async function fetchScores() {
+        const { data, error } = await supabase
+          .from("scores")
+          .select("*")
+          .eq("game", "knights-tour")   // käytä oikeaa peliavainta
+          .eq("mode", "8x8")
+          .order("score", { ascending: true })
+          .limit(10);
+
+        if (error) {
+          console.error("Error fetching scores:", error);
+        } else {
+          console.log("Supabase data:", data);
+        }
+      }
+
+      fetchScores();
+    </script>
+  </body>
+</html>
