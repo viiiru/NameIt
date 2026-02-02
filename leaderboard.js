@@ -6,9 +6,11 @@ const LEADERBOARD_KEY = 'funGames_leaderboard';
 function getLeaderboard() {
   try {
     const stored = localStorage.getItem(LEADERBOARD_KEY);
-    return stored ? JSON.parse(stored) : { nameit: [], typeit: [], 'equation-pyramid': [] };
+    return stored
+      ? JSON.parse(stored)
+      : { nameit: [], typeit: [], "equation-pyramid": [], "knights-tour": [] };
   } catch {
-    return { nameit: [], typeit: [], 'equation-pyramid': [] };
+    return { nameit: [], typeit: [], "equation-pyramid": [], "knights-tour": [] };
   }
 }
 

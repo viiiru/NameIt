@@ -1,0 +1,327 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  background: radial-gradient(
+    circle at top,
+    #22c55e 0,
+    #0ea5e9 40%,
+    #4c1d95 100%
+  );
+  color: #e5e7eb;
+  min-height: 100vh;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+}
+
+.app {
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: 100vh;
+}
+
+.header {
+  text-align: center;
+  position: relative;
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #f97316;
+  text-shadow: 0 0 30px rgba(250, 204, 21, 0.6);
+}
+
+.subtitle {
+  margin: 4px 0 0;
+  color: #f9a8d4;
+  font-size: clamp(0.8rem, 2vw, 0.95rem);
+}
+
+.game {
+  background: linear-gradient(
+    145deg,
+    rgba(15, 23, 42, 0.95),
+    rgba(30, 64, 175, 0.9)
+  );
+  border-radius: 20px;
+  box-shadow: 0 22px 60px rgba(15, 23, 42, 0.9);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+  min-height: 0;
+}
+
+.hud {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  border-radius: 14px;
+  padding: 8px 10px;
+  background: linear-gradient(
+    135deg,
+    rgba(56, 189, 248, 0.9),
+    rgba(244, 114, 182, 0.9)
+  );
+  border: 1px solid rgba(254, 249, 195, 0.8);
+  flex-shrink: 0;
+}
+
+.hud-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.hud-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #fef3c7;
+}
+
+.hud-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #f9fafb;
+}
+
+.hud-select {
+  margin-top: 2px;
+  padding: 3px 6px;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, 0.3);
+  background: rgba(15, 23, 42, 0.8);
+  color: #fef9c3;
+  font-size: 0.75rem;
+}
+
+.board-container {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+}
+
+.board {
+  display: grid;
+  gap: 2px;
+  width: min(420px, 90vw);
+  height: min(420px, 90vw);
+  background: #020617;
+  padding: 4px;
+  border-radius: 16px;
+  box-shadow: 0 12px 35px rgba(15, 23, 42, 0.9);
+}
+
+.square {
+  position: relative;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(1.2rem, 3vw, 1.6rem);
+  font-weight: 600;
+  user-select: none;
+  transition: transform 0.1s ease-out, box-shadow 0.1s ease-out,
+    background-color 0.15s ease-out, color 0.15s ease-out, opacity 0.15s ease;
+  cursor: default;
+}
+
+.square.light {
+  background: #e5e7eb;
+  color: #020617;
+}
+
+.square.dark {
+  background: #1f2937;
+  color: #e5e7eb;
+}
+
+.square.visited {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: #022c22;
+  box-shadow: inset 0 0 0 2px rgba(15, 23, 42, 0.5);
+}
+
+.square.current {
+  background: linear-gradient(145deg, #f97316, #ec4899);
+  color: #0b1020;
+  box-shadow: 0 0 0 2px rgba(254, 249, 195, 0.9),
+    0 10px 25px rgba(249, 115, 22, 0.7);
+  transform: scale(1.05);
+}
+
+.square.legal-move {
+  cursor: pointer;
+  outline: 2px dashed rgba(254, 249, 195, 0.8);
+  outline-offset: -3px;
+}
+
+.square.legal-move:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(56, 189, 248, 0.6);
+}
+
+.square.hint {
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.9),
+    0 0 15px rgba(59, 130, 246, 0.9);
+}
+
+.move-number {
+  position: absolute;
+  bottom: 3px;
+  right: 4px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  opacity: 0.9;
+}
+
+.knight-icon {
+  pointer-events: none;
+}
+
+.controls {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.btn {
+  border-radius: 999px;
+  border: none;
+  padding: 10px 18px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 120ms ease-out, box-shadow 120ms ease-out,
+    background-color 120ms ease-out, color 120ms ease-out;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.btn.primary {
+  background: linear-gradient(135deg, #f97316, #ec4899);
+  color: #0b1020;
+  box-shadow: 0 12px 30px rgba(249, 115, 22, 0.6);
+}
+
+.btn.primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 40px rgba(236, 72, 153, 0.9);
+}
+
+.btn.secondary {
+  background: linear-gradient(135deg, #22c55e, #0ea5e9);
+  color: #022c22;
+  border: 1px solid rgba(22, 163, 74, 0.8);
+  box-shadow: 0 8px 25px rgba(22, 163, 74, 0.6);
+}
+
+.btn.secondary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 32px rgba(14, 165, 233, 0.9);
+  background: linear-gradient(135deg, #4ade80, #38bdf8);
+}
+
+.btn.small {
+  padding: 6px 12px;
+  font-size: 0.8rem;
+}
+
+.btn:disabled {
+  opacity: 0.52;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.status {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.8rem;
+  color: #9ca3af;
+  min-height: 32px;
+}
+
+.status-line {
+  min-height: 1em;
+}
+
+.status-ok {
+  color: #4ade80;
+}
+
+.status-error {
+  color: #f97316;
+}
+
+.footer {
+  margin-top: 4px;
+  text-align: center;
+  font-size: 0.75rem;
+  color: #6b7280;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.back-button {
+  color: #fef3c7;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(254, 249, 195, 0.4);
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 4px;
+}
+
+.back-button:hover {
+  background: rgba(15, 23, 42, 0.8);
+  border-color: rgba(254, 249, 195, 0.7);
+  color: #fef9c3;
+}
+
+@media (min-width: 768px) {
+  .game {
+    padding: 22px 24px 20px;
+  }
+
+  .hud {
+    padding-inline: 18px;
+  }
+}
+

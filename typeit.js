@@ -299,7 +299,9 @@ function loadNextImage() {
   const sourceItems =
     activeCategory === "all"
       ? IMAGE_ITEMS
-      : IMAGE_ITEMS.filter((item) => item.category === activeCategory);
+      : IMAGE_ITEMS.filter(
+          (item) => item.category === activeCategory && !item._broken
+        );
 
   if (!Array.isArray(sourceItems) || sourceItems.length === 0) {
     // Don't show error messages - just log to console
@@ -371,21 +373,33 @@ function loadNextImage() {
     };
     
     elements.currentImage.addEventListener("load", showImage, { once: true });
-    elements.currentImage.addEventListener("error", () => {
-      if (elements.loadingIndicator) {
-        elements.loadingIndicator.classList.add("hidden");
-      }
-      // Log error but don't interrupt gameplay
-      if (acceptingAnswers) {
-        console.error(`Image not found: ${currentItem.id}`);
-      } else {
-        console.error(`Image not found: ${currentItem.id} (round ended)`);
-      }
-      // Still focus input even if image fails
-      if (elements.answerInput) {
-        elements.answerInput.focus();
-      }
-    }, { once: true });
+    elements.currentImage.addEventListener(
+      "error",
+      () => {
+        if (elements.loadingIndicator) {
+          elements.loadingIndicator.classList.add("hidden");
+        }
+        // Mark this item as broken so it will be skipped for the rest of the session
+        if (currentItem) {
+          currentItem._broken = true;
+        }
+
+        // Log error but don't interrupt gameplay
+        if (acceptingAnswers) {
+          console.error(`Image not found: ${currentItem?.id}`);
+        } else {
+          console.error(
+            `Image not found: ${currentItem?.id} (round ended)`
+          );
+        }
+
+        // Try another image so the player always sees something
+        if (acceptingAnswers) {
+          loadNextImage();
+        }
+      },
+      { once: true }
+    );
   }
   
   // Input is already cleared in checkAnswer, focus happens in loadNextImage for faster flow

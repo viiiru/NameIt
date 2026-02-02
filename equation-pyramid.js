@@ -9,6 +9,7 @@ let correctSound = null;
 let backgroundMusic = null;
 let endMusic = null;
 let isMuted = false;
+let currentDifficulty = "medium";
 let selectedOperations = []; // Track selected operations for click-based gameplay
 let roundStartTime = null; // Track when round started
 const ROUND_DURATION_SECONDS = 60;
@@ -27,59 +28,102 @@ const elements = {
   calculatedResult: document.getElementById("calculated-result"),
   gameMessage: document.getElementById("game-message"),
   soundToggleButton: document.getElementById("sound-toggle-button"),
+  difficultySelect: document.getElementById("difficulty-select"),
 };
 
-// Generate a random pyramid puzzle
-function generatePuzzle() {
-  // Generate 8-12 operations to show in pyramid
-  const operations = ['+', '-', 'x', '/'];
-  const numOperations = 8 + Math.floor(Math.random() * 5); // 8-12 operations
+// Get current difficulty from the selector
+function getCurrentDifficulty() {
+  if (elements.difficultySelect) {
+    const value = elements.difficultySelect.value;
+    if (value === "easy" || value === "medium" || value === "hard") {
+      return value;
+    }
+  }
+  return currentDifficulty || "medium";
+}
+
+// Generate a random pyramid puzzle based on difficulty
+function generatePuzzle(difficulty = getCurrentDifficulty()) {
+  // Configure ranges per difficulty
+  let operations = ["+", "-", "x", "/"];
+  let numOperationsMin, numOperationsMax, useOpsMin, useOpsMax, startMax, targetMax;
+
+  if (difficulty === "easy") {
+    operations = ["+", "-"];
+    numOperationsMin = 6;
+    numOperationsMax = 8;
+    useOpsMin = 3;
+    useOpsMax = 4;
+    startMax = 20;
+    targetMax = 200;
+  } else if (difficulty === "hard") {
+    numOperationsMin = 10;
+    numOperationsMax = 14;
+    useOpsMin = 5;
+    useOpsMax = 7;
+    startMax = 40;
+    targetMax = 2000;
+  } else {
+    // medium (default)
+    numOperationsMin = 8;
+    numOperationsMax = 12;
+    useOpsMin = 3;
+    useOpsMax = 6;
+    startMax = 30;
+    targetMax = 1000;
+  }
+
+  const numOperations =
+    numOperationsMin + Math.floor(Math.random() * (numOperationsMax - numOperationsMin + 1));
   
   const puzzleOps = [];
   for (let i = 0; i < numOperations; i++) {
     const op = operations[Math.floor(Math.random() * operations.length)];
     let num;
-    
-    if (op === '+') {
+
+    if (op === "+") {
       num = 1 + Math.floor(Math.random() * 20); // 1-20
-    } else if (op === '-') {
+    } else if (op === "-") {
       num = 1 + Math.floor(Math.random() * 15); // 1-15
-    } else if (op === 'x') {
-      num = 2 + Math.floor(Math.random() * 8); // 2-9
-    } else { // '/'
-      num = 2 + Math.floor(Math.random() * 8); // 2-9
+    } else if (op === "x") {
+      num = 2 + Math.floor(Math.random() * 9); // 2-10
+    } else {
+      // '/'
+      num = 2 + Math.floor(Math.random() * 9); // 2-10
     }
-    
+
     puzzleOps.push({ op, num });
   }
   
   // Generate a target that's reachable using some of these operations
   // Start with a random number
-  let startNum = 1 + Math.floor(Math.random() * 20);
+  let startNum = 1 + Math.floor(Math.random() * startMax);
   
   // Use a random subset of operations to calculate target
-  const numOpsToUse = 3 + Math.floor(Math.random() * 4); // Use 3-6 operations
+  const numOpsToUse =
+    useOpsMin + Math.floor(Math.random() * (useOpsMax - useOpsMin + 1));
   const shuffledOps = [...puzzleOps].sort(() => Math.random() - 0.5);
   const opsToUse = shuffledOps.slice(0, Math.min(numOpsToUse, puzzleOps.length));
   
   let result = startNum;
   const solutionSteps = [{ type: 'start', value: startNum }];
   opsToUse.forEach(({ op, num }) => {
-    if (op === '+') {
+    if (op === "+") {
       result += num;
-    } else if (op === '-') {
+    } else if (op === "-") {
       result -= num;
-    } else if (op === 'x') {
+    } else if (op === "x") {
       result *= num;
-    } else { // '/'
+    } else {
+      // '/'
       result = Math.round(result / num);
     }
     solutionSteps.push({ type: 'operation', op, num });
   });
   
   // Ensure target is positive and reasonable
-  if (result <= 0 || result > 1000) {
-    return generatePuzzle(); // Regenerate if invalid
+  if (result <= 0 || result > targetMax) {
+    return generatePuzzle(difficulty); // Regenerate if invalid
   }
   
   return {
@@ -231,6 +275,11 @@ function resetGameState() {
   if (elements.submitButton) {
     elements.submitButton.style.display = "none";
   }
+
+  // Ensure difficulty selector is enabled when not in a round
+  if (elements.difficultySelect) {
+    elements.difficultySelect.disabled = false;
+  }
   
   if (roundTimerId) {
     clearInterval(roundTimerId);
@@ -245,6 +294,7 @@ function startRound() {
   resetGameState();
   acceptingAnswers = true;
   roundStartTime = Date.now(); // Track when round started
+  currentDifficulty = getCurrentDifficulty();
   
   if (elements.startButton) {
     elements.startButton.textContent = "Playing…";
@@ -259,9 +309,14 @@ function startRound() {
   if (elements.submitButton) {
     elements.submitButton.style.display = "inline-flex";
   }
+
+  // Lock difficulty during a round so it can't change mid-puzzle
+  if (elements.difficultySelect) {
+    elements.difficultySelect.disabled = true;
+  }
   
   // Generate and display new puzzle
-  currentPuzzle = generatePuzzle();
+  currentPuzzle = generatePuzzle(currentDifficulty);
   displayPyramid(currentPuzzle);
   if (elements.targetValue) {
     elements.targetValue.textContent = String(currentPuzzle.target);
@@ -313,8 +368,9 @@ function stopGame() {
   if (elements.stopButton) {
     elements.stopButton.style.display = "none";
   }
-  if (elements.answerInput) {
-    elements.answerInput.disabled = true;
+  // Re-enable difficulty selection
+  if (elements.difficultySelect) {
+    elements.difficultySelect.disabled = false;
   }
   elements.gameMessage.textContent = `Game stopped. Your score: ${currentScore}`;
   
@@ -368,6 +424,10 @@ function endRound() {
   }
   if (elements.submitButton) {
     elements.submitButton.style.display = "none";
+  }
+  // Re-enable difficulty selection
+  if (elements.difficultySelect) {
+    elements.difficultySelect.disabled = false;
   }
   // Show score and, if available, one correct solution for learning
   if (currentPuzzle && currentPuzzle.solutionDisplay) {

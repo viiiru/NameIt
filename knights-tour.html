@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <title>Knight's Tour - Chess Puzzle Game</title>
+    <meta
+      name="description"
+      content="Knight's Tour - Move the knight to visit every square exactly once."
+    />
+    <link rel="stylesheet" href="knights-tour.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="header">
+        <h1 class="title">Knight's Tour</h1>
+        <p class="subtitle">Visit every square exactly once.</p>
+      </header>
+
+      <main class="game">
+        <section class="hud">
+          <div class="hud-item">
+            <span class="hud-label">Moves</span>
+            <span id="move-count" class="hud-value">0</span>
+          </div>
+          <div class="hud-item">
+            <span class="hud-label">Board Size</span>
+            <select id="board-size-select" class="hud-select">
+              <option value="5">5 × 5</option>
+              <option value="6">6 × 6</option>
+              <option value="7">7 × 7</option>
+              <option value="8" selected>8 × 8</option>
+            </select>
+          </div>
+          <div class="hud-item">
+            <span class="hud-label">Hint</span>
+            <button id="hint-button" class="btn secondary small">Show Hint</button>
+          </div>
+        </section>
+
+        <section class="board-container">
+          <div id="board" class="board" aria-label="Knight's Tour board"></div>
+        </section>
+
+        <section class="controls">
+          <button id="restart-button" class="btn primary">Restart</button>
+          <button id="undo-button" class="btn secondary">Undo Move</button>
+        </section>
+
+        <section class="status">
+          <div id="game-message" class="status-line"></div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <span>Built for logic puzzle lovers.</span>
+        <a href="index.html" class="back-button" title="Back to Fun Games"
+          >← Back to Fun Games</a
+        >
+      </footer>
+    </div>
+
+    <script src="leaderboard.js"></script>
+    <script src="knights-tour.js"></script>
+  </body>
+</html>
+

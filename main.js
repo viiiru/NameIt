@@ -207,6 +207,9 @@ function handleGameClick(gameName) {
     } else if (gameName === 'equation-pyramid') {
       console.log('Navigating to Equation Pyramid...');
       window.location.href = 'equation-pyramid.html';
+    } else if (gameName === 'knights-tour') {
+      console.log("Navigating to Knight's Tour...");
+      window.location.href = 'knights-tour.html';
     } else {
       console.warn('Unknown game:', gameName);
       alert('Unknown game: ' + gameName);

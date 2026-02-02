@@ -493,7 +493,9 @@ function loadNextImage() {
   const sourceItems =
     activeCategory === "all"
       ? IMAGE_ITEMS
-      : IMAGE_ITEMS.filter((item) => item.category === activeCategory);
+      : IMAGE_ITEMS.filter(
+          (item) => item.category === activeCategory && !item._broken
+        );
 
   if (!Array.isArray(sourceItems) || sourceItems.length === 0) {
     elements.gameMessage.textContent =
@@ -564,13 +566,25 @@ function loadNextImage() {
     
     // Use load event for when image finishes loading
     elements.currentImage.addEventListener("load", showImage, { once: true });
-    elements.currentImage.addEventListener("error", () => {
-      if (elements.loadingIndicator) {
-        elements.loadingIndicator.classList.add("hidden");
-      }
-      // Image not found - just log it, don't show message to user
-      console.error(`Image not found: ${currentItem.id}`);
-    }, { once: true });
+    elements.currentImage.addEventListener(
+      "error",
+      () => {
+        if (elements.loadingIndicator) {
+          elements.loadingIndicator.classList.add("hidden");
+        }
+        // Mark this item as broken so it will be skipped for the rest of the session
+        if (currentItem) {
+          currentItem._broken = true;
+        }
+        console.error(`Image not found: ${currentItem?.id}`);
+
+        // Try to load another image so the game doesn't get stuck on a missing file
+        if (acceptingAnswers && timeRemaining > 0) {
+          loadNextImage();
+        }
+      },
+      { once: true }
+    );
   }
 }
 
